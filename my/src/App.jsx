@@ -8,7 +8,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { api, setToken } from "./data/services";
+import { api, resolveAssetUrl, setToken } from "./data/services";
 import { useTranslation } from "react-i18next";
 import i18n, { normalizeLanguage } from "./i18n.js";
 import {
@@ -24,8 +24,63 @@ import "./App.css";
 
 const State = createContext(null);
 const useApp = () => useContext(State);
+const regionKeys = {
+  "Чуйская область": "region.chuy",
+  "Ошская область": "region.osh",
+  "Нарынская область": "region.naryn",
+  "Иссык-Кульская область": "region.issyk",
+  "Джалал-Абадская область": "region.jalalAbad",
+  "Таласская область": "region.talas",
+};
+const categoryKeys = {
+  Горы: "category.mountains",
+  "Озёра": "category.lakes",
+  Треккинг: "category.trekking",
+  Каньоны: "category.canyons",
+  Приключения: "category.adventure",
+};
+const durationKeys = {
+  "1 день": "duration.oneDay",
+  "2 дня": "duration.twoDays",
+  "3 дня": "duration.threeDays",
+  "4 дня": "duration.fourDays",
+};
+const difficultyKeys = {
+  Легко: "difficulty.easy",
+  Средне: "difficulty.medium",
+  Сложно: "difficulty.hard",
+};
+function localizePlace(place, t) {
+  const translated = (key, fallback) => key ? t(key, { defaultValue: fallback }) : fallback;
+  return {
+    ...place,
+    name: translated(`placeData.${place._id}.name`, place.name),
+    description: translated(`placeData.${place._id}.description`, place.description),
+    tag: translated(`placeData.${place._id}.tag`, place.tag || place.category),
+    region: translated(regionKeys[place.region], place.region),
+    category: translated(categoryKeys[place.category], place.category),
+    duration: translated(durationKeys[place.duration], place.duration),
+    difficulty: translated(difficultyKeys[place.difficulty], place.difficulty || ""),
+  };
+}
+const localizedValue = (value, keys, t) => keys[value] ? t(keys[value]) : value;
+const numberLocale = () => ({ ru: "ru-RU", ky: "ky-KG", en: "en-US" }[i18n.resolvedLanguage] || "ru-RU");
+const formatNumber = (value) => Number(value || 0).toLocaleString(numberLocale());
+const localizedStatus = (status, t) => {
+  const keys = { pending: "common.statusPending", confirmed: "common.statusConfirmed", cancelled: "common.statusCancelled" };
+  return keys[status] ? t(keys[status]) : status;
+};
+const apiErrorMessage = (error, t, fallback) => {
+  const status = error.response?.status;
+  if (status === 401) return t(fallback);
+  if (status === 403) return t("api.forbidden");
+  if (status === 400) return t("api.invalidData");
+  if (status === 409) return t("api.conflict");
+  if (!error.response) return t("api.networkError");
+  return t(fallback);
+};
 const DEFAULT_PLACE_IMAGE =
-  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80";
+  "/tours/photo-1501785888041-af3ef285b470.jpg";
 
 function App() {
   const { t } = useTranslation();
@@ -51,7 +106,12 @@ function App() {
     api
       .get("/places")
       .then((r) => {
-        if (r.data?.length) setPlaces(r.data);
+        const data = Array.isArray(r.data)
+          ? r.data
+          : Array.isArray(r.data?.places)
+            ? r.data.places
+            : [];
+        setPlaces(data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -67,8 +127,13 @@ function App() {
       return;
     }
     localStorage.setItem("travel-lang", normalized);
-    i18n.changeLanguage(normalized);
+    if (i18n.resolvedLanguage !== normalized) i18n.changeLanguage(normalized);
+    document.documentElement.lang = normalized;
   }, [lang]);
+  useEffect(() => {
+    document.title = t("meta.title");
+    document.querySelector('meta[name="description"]')?.setAttribute("content", t("meta.description"));
+  }, [t]);
   useEffect(() => {
     if (!toast) return;
     const id = setTimeout(() => setToast(""), 3000);
@@ -236,13 +301,14 @@ function Header() {
 function Home() {
   const { places } = useApp();
   const { t } = useTranslation();
+  const availablePlaces = Array.isArray(places) ? places : [];
   return (
     <>
       <main>
         <section className="hero">
           <TravelImage
             src="https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&w=2200&q=90"
-            alt="Mountain landscape of Kyrgyzstan"
+            alt={t("image.heroAlt")}
             loading="eager"
           />
           <div className="hero-shade" />
@@ -289,7 +355,7 @@ function Home() {
             </Link>
           </div>
           <div className="place-grid">
-            {places.slice(0, 3).map((p, i) => (
+            {availablePlaces.slice(0, 3).map((p, i) => (
               <PlaceCard key={p._id} place={p} featured={i === 0} />
             ))}
           </div>
@@ -298,14 +364,12 @@ function Home() {
           <div className="story-image">
             <TravelImage
               src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1100&q=85"
-              alt="Pine peaks of Tien Shan"
+              alt={t("image.storyAlt")}
             />
             <div className="story-stamp">
               100%
               <small>
-                LOCAL
-                <br />
-                EXPERIENCE
+                {t("home.localExperience")}
               </small>
             </div>
           </div>
@@ -336,7 +400,7 @@ function Home() {
           <div className="quote-person">
             <TravelImage
               src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80"
-              alt="Anna"
+              alt={t("image.guestAlt")}
             />
             <span>
               <b>{t("home.testimonialName")}</b>
@@ -352,7 +416,7 @@ function Home() {
         <section className="cta">
           <TravelImage
             src="https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=1600&q=85"
-            alt="Kyrgyzstan trails"
+            alt={t("image.trailsAlt")}
           />
           <div className="cta-overlay" />
           <div>
@@ -451,12 +515,18 @@ function Catalog() {
   }, [location.search]);
 
   const filtered = places.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q.toLowerCase()) &&
+      (p) => {
+        const localized = localizePlace(p, t);
+        const searchableText = [
+          p.name, p.description, localized.name, localized.description,
+          localized.region, localized.category, localized.tag,
+        ].join(" ").toLocaleLowerCase();
+        return searchableText.includes(q.trim().toLocaleLowerCase()) &&
         (!region || p.region === region) &&
         (!category || p.category === category) &&
         p.rating >= rating &&
-        Number(p.price) <= Number(maxPrice),
+        Number(p.price) <= Number(maxPrice);
+      },
     ).sort((a, b) => {
       if (sort === "cheap") return Number(a.price) - Number(b.price);
       if (sort === "expensive") return Number(b.price) - Number(a.price);
@@ -504,7 +574,7 @@ function Catalog() {
             <select value={region} onChange={(e) => { setRegion(e.target.value); setPage(1); }}>
               <option value="">{t("catalog.anyRegion")}</option>
               {[...new Set(places.map((p) => p.region))].map((x) => (
-                <option key={x}>{x}</option>
+                <option key={x} value={x}>{localizedValue(x, regionKeys, t)}</option>
               ))}
             </select>
           </FilterField>
@@ -515,7 +585,7 @@ function Catalog() {
             >
               <option value="">{t("catalog.anyCategory")}</option>
               {[...new Set(places.map((p) => p.category))].map((x) => (
-                <option key={x}>{x}</option>
+                <option key={x} value={x}>{localizedValue(x, categoryKeys, t)}</option>
               ))}
             </select>
           </FilterField>
@@ -572,18 +642,19 @@ function Catalog() {
 function PlaceDetails() {
   const { id } = useParams(),
     { places, addCart, favorites, toggleFavorite } = useApp(),
-    p = places.find((x) => x._id === id),
+    originalPlace = places.find((x) => x._id === id),
     [date, setDate] = useState(new URLSearchParams(location.search).get("date") || ""),
     [qty, setQty] = useState(2);
   const { t } = useTranslation();
-  if (!p) return <NotFound />;
+  if (!originalPlace) return <NotFound />;
+  const p = localizePlace(originalPlace, t);
   return (
     <main className="page detail-page">
       <Link className="back-link" to="/places">
         {t("catalog.back")}
       </Link>
       <div className="detail-hero">
-        <TravelImage src={p.image} alt={p.name} />
+        <TravelImage src={p.image} alt={t("image.placeAlt", { name: p.name })} />
         <div className="detail-overlay" />
         <div className="detail-title">
           <span className="tag">{p.tag || p.category}</span>
@@ -641,7 +712,7 @@ function BookingBox({
   return (
     <aside className="booking-box">
       <div className="price">
-        {place.price?.toLocaleString("ru-RU")} {t("catalog.currency")} <small>/{t("catalog.perPerson")}</small>
+        {formatNumber(place.price)} {t("catalog.currency")} <small>/{t("catalog.perPerson")}</small>
       </div>
       <label>
         {t("catalog.bookingDate")}
@@ -663,7 +734,7 @@ function BookingBox({
         </div>
       </label>
       <div className="total">
-        {t("catalog.total")} <b>{(place.price * qty).toLocaleString("ru-RU")} {t("catalog.currency")}</b>
+        {t("catalog.total")} <b>{formatNumber(place.price * qty)} {t("catalog.currency")}</b>
       </div>
       <button className="button button-dark full" onClick={onBook}>
         {t("catalog.bookNow")} <span>↗</span>
@@ -725,7 +796,7 @@ function ReviewForm({ placeId, onAdded }) {
       setText("");
       notify(t("catalog.reviewThanks"));
     } catch (err) {
-      notify(err.response?.data?.message || t("catalog.reviewDisabled"));
+      notify(apiErrorMessage(err, t, "catalog.reviewDisabled"));
     }
   };
   return (
@@ -819,7 +890,7 @@ function Cart() {
       await api.post("/orders", {
         items: cart.map((x) => ({
           placeId: x._id,
-          name: x.name,
+          name: t(`placeData.${x._id}.name`, { defaultValue: x.name }),
           date: x.date,
           quantity: x.qty,
           price: x.price,
@@ -830,7 +901,7 @@ function Cart() {
       setCart([]);
       localStorage.removeItem("travel-cart");
     } catch (e) {
-      notify(e.response?.data?.message || t("cart.orderFail"));
+      notify(apiErrorMessage(e, t, "cart.orderFail"));
     }
   };
   return (
@@ -842,28 +913,29 @@ function Cart() {
       {cart.length ? (
         <div className="cart-layout">
           <div className="cart-items">
-            {cart.map((p) => (
-              <div className="cart-item" key={p.key}>
-                <TravelImage src={p.image} alt={p.name} />
+            {cart.map((p) => {
+              const trip = localizePlace(p, t);
+              return <div className="cart-item" key={p.key}>
+                <TravelImage src={p.image} alt={t("image.placeAlt", { name: trip.name })} />
                 <div>
                   <Link to={`/places/${p._id}`}>
-                    <b>{p.name}</b>
+                    <b>{trip.name}</b>
                   </Link>
                   <p>
                     {p.date || t("catalog.noDate")} · {p.qty} {p.qty === 1 ? t("catalog.guestOne") : t("catalog.guestMany")}
                   </p>
                 </div>
-                <strong>{(p.price * p.qty).toLocaleString("ru-RU")} {t("catalog.currency")}</strong>
+                <strong>{formatNumber(p.price * p.qty)} {t("catalog.currency")}</strong>
                 <button onClick={() => remove(p.key)} aria-label={t("admin.delete")}>
                   ×
                 </button>
-              </div>
-            ))}
+              </div>;
+            })}
           </div>
           <aside className="booking-box">
             <h3>{t("catalog.yourOrder")}</h3>
             <div className="total">
-              {t("catalog.total")} <b>{total.toLocaleString("ru-RU")} {t("catalog.currency")}</b>
+              {t("catalog.total")} <b>{formatNumber(total)} {t("catalog.currency")}</b>
             </div>
             <button className="button button-dark full" onClick={order}>
               {t("catalog.checkout")} ↗
@@ -931,7 +1003,7 @@ function AuthPage({ mode }) {
       notify(register ? t("auth.welcome") : t("auth.loginSuccess"));
       nav("/account");
     } catch (err) {
-      notify(err.response?.data?.message || t("auth.loginFailure"));
+      notify(apiErrorMessage(err, t, "auth.loginFailure"));
     }
   };
   return (
@@ -939,7 +1011,7 @@ function AuthPage({ mode }) {
       <div className="auth-image">
         <TravelImage
           src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1000&q=85"
-          alt="Kyrgyz mountains"
+          alt={t("image.storyAlt")}
         />
         <div>
           <div className="eyebrow">{t("auth.heroEyebrow")}</div>
@@ -1045,7 +1117,7 @@ function OAuthCallback() {
         navigate("/account");
       })
       .catch((err) => {
-        notify(err.response?.data?.message || t("auth.oauthFailure"));
+        notify(apiErrorMessage(err, t, "auth.oauthFailure"));
         navigate("/login");
       });
   }, [provider, navigate, notify, setUser, t]);
@@ -1053,7 +1125,7 @@ function OAuthCallback() {
   return (
     <main className="page">
       <div className="page-title">
-        <div className="eyebrow dark">AUTH</div>
+        <div className="eyebrow dark">{t("auth.oauthEyebrow")}</div>
         <h1>{t("auth.oauthConnecting")}</h1>
       </div>
     </main>
@@ -1087,9 +1159,9 @@ function Account() {
           orders.map((o) => (
             <div className="order-row" key={o._id}>
               <span>{t("account.orderPrefix")} #{String(o._id).slice(-6)}</span>
-              <b>{o.items?.map((x) => x.name).join(", ")}</b>
-              <span>{o.status}</span>
-              <strong>{o.total?.toLocaleString("ru-RU")} {t("catalog.currency")}</strong>
+              <b>{o.items?.map((x) => t(`placeData.${x.placeId}.name`, { defaultValue: x.name })).join(", ")}</b>
+              <span>{localizedStatus(o.status, t)}</span>
+              <strong>{formatNumber(o.total)} {t("catalog.currency")}</strong>
             </div>
           ))
         ) : (
@@ -1118,7 +1190,7 @@ function StatsChart({ orders }) {
   const data = Array.from({ length: 6 }, (_, i) => {
     const d = new Date();
     d.setMonth(d.getMonth() - 5 + i);
-    const month = d.toLocaleString("ru-RU", { month: "short" });
+    const month = d.toLocaleString(numberLocale(), { month: "short" });
     return {
       month,
       count: orders.filter(
@@ -1173,7 +1245,7 @@ function AdminManagement({ users, reload }) {
       notify(t("admin.roleUpdated"));
       reload();
     } catch (e) {
-      notify(e.response?.data?.message || t("admin.roleUpdateFail"));
+      notify(apiErrorMessage(e, t, "admin.roleUpdateFail"));
     }
   };
   const remove = async (id) => {
@@ -1301,7 +1373,7 @@ function Admin() {
       setEditingId(null);
       setForm(false);
     } catch (e) {
-      notify(e.response?.data?.message || t("admin.saveFail"));
+      notify(apiErrorMessage(e, t, "admin.saveFail"));
     }
   };
   const deletePlace = async (p) => {
@@ -1406,18 +1478,21 @@ function Admin() {
         </form>
       )}
       <div className="admin-table">
-        {places.map((p) => (
-          <div className="admin-row" key={p._id}>
-            <TravelImage src={p.image} alt={p.name} />
-            <b>{p.name}</b>
-            <span>{p.region}</span>
-            <span>{p.price} сом</span>
-            <div className="admin-row-actions">
-              <button onClick={() => editPlace(p)}>{t("admin.edit")}</button>
-              <button onClick={() => deletePlace(p)}>{t("admin.delete")}</button>
+        {places.map((p) => {
+          const display = localizePlace(p, t);
+          return (
+            <div className="admin-row" key={p._id}>
+              <TravelImage src={p.image} alt={t("image.placeAlt", { name: display.name })} />
+              <b>{display.name}</b>
+              <span>{display.region}</span>
+              <span>{formatNumber(p.price)} {t("catalog.currency")}</span>
+              <div className="admin-row-actions">
+                <button onClick={() => editPlace(p)}>{t("admin.edit")}</button>
+                <button onClick={() => deletePlace(p)}>{t("admin.delete")}</button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <div className="admin-heading">
         <h2>{t("admin.lastOrders")}</h2>
@@ -1427,8 +1502,8 @@ function Admin() {
           <div className="admin-row" key={o._id}>
             <b>#{String(o._id).slice(-6)}</b>
             <span>{o.user?.name || o.user?.email || t("admin.userRoleUser")}</span>
-            <span>{o.status}</span>
-            <strong>{o.total} {t("catalog.currency")}</strong>
+            <span>{localizedStatus(o.status, t)}</span>
+            <strong>{formatNumber(o.total)} {t("catalog.currency")}</strong>
           </div>
         ))}
       </div>
@@ -1460,10 +1535,17 @@ function AuthRedirect() {
 }
 function TravelImage({ src, alt, className, loading = "lazy" }) {
   const { t } = useTranslation();
-  const [unavailable, setUnavailable] = useState(false);
-  const imageSrc = src || DEFAULT_PLACE_IMAGE;
+  const imageSrc = resolveAssetUrl(src || DEFAULT_PLACE_IMAGE);
+  const fallbackSrc = resolveAssetUrl(DEFAULT_PLACE_IMAGE);
+  const [failedSource, setFailedSource] = useState(false);
+  const [failedFallback, setFailedFallback] = useState(false);
 
-  if (unavailable) {
+  useEffect(() => {
+    setFailedSource(false);
+    setFailedFallback(false);
+  }, [imageSrc]);
+
+  if (failedFallback) {
     return (
       <span className={`image-fallback ${className || ""}`} role="img" aria-label={alt}>
         <span>TRAVEL KG<small>{t("helper.travelShort")}</small></span>
@@ -1473,11 +1555,14 @@ function TravelImage({ src, alt, className, loading = "lazy" }) {
 
   return (
     <img
-      src={imageSrc}
+      src={failedSource ? fallbackSrc : imageSrc}
       alt={alt}
       className={className}
       loading={loading}
-      onError={() => setUnavailable(true)}
+      onError={() => {
+        if (failedSource) setFailedFallback(true);
+        else setFailedSource(true);
+      }}
     />
   );
 }
@@ -1485,12 +1570,13 @@ function TravelImage({ src, alt, className, loading = "lazy" }) {
 function PlaceCard({ place, featured = false, date = "" }) {
   const { favorites, toggleFavorite } = useApp();
   const { t } = useTranslation();
+  const displayPlace = localizePlace(place, t);
   const detailsUrl = `/places/${place._id}${date ? `?date=${encodeURIComponent(date)}` : ""}`;
   return (
     <article className={`place-card ${featured ? "featured" : ""}`}>
       <Link to={detailsUrl} className="card-image">
-        <TravelImage src={place.image} alt={place.name} />
-        <span className="tag">{place.tag || place.category}</span>
+        <TravelImage src={place.image} alt={t("image.placeAlt", { name: displayPlace.name })} />
+        <span className="tag">{displayPlace.tag}</span>
       </Link>
       <button
         className={`heart ${favorites.includes(place._id) ? "selected" : ""}`}
@@ -1501,16 +1587,16 @@ function PlaceCard({ place, featured = false, date = "" }) {
       </button>
       <div className="card-body">
         <div className="card-meta">
-          <span>⌖ {place.region.split(" ")[0]}</span>
+          <span>⌖ {displayPlace.region}</span>
           <span>★ {place.rating}</span>
         </div>
         <Link className="card-title" to={detailsUrl}>
-          {place.name}
+          {displayPlace.name}
         </Link>
         <div className="card-bottom">
-          <span>◷ {place.duration}</span>
+          <span>◷ {displayPlace.duration}</span>
           <b>
-            {t("catalog.from")} {place.price?.toLocaleString("ru-RU")} <small>{t("catalog.currency")}</small>
+            {t("catalog.from")} {formatNumber(place.price)} <small>{t("catalog.currency")}</small>
           </b>
         </div>
       </div>
@@ -1716,4 +1802,25 @@ function NotFound() {
 }
 
 export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
