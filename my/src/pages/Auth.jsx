@@ -27,8 +27,12 @@ export default function AuthPage({ mode }) {
         notify(t("auth.oauthNotConfigured", { provider: name }), "info");
         return;
       }
+      // Random state protects against forged sign-in links; checked on return in OAuthCallback.
+      const state = crypto.getRandomValues(new Uint32Array(4)).join("-");
+      sessionStorage.setItem("oauth-state", state);
+      sessionStorage.setItem("oauth-from", after);
       notify(t("auth.oauthRedirect", { provider: name }), "info");
-      window.location.href = data.authUrl;
+      window.location.href = `${data.authUrl}&state=${encodeURIComponent(state)}`;
     } catch (err) {
       notify(err.response?.status === 400 ? t("auth.oauthNotConfigured", { provider: name }) : errorText(err, t, "auth.oauthUnavailable"), "info");
     }
@@ -125,8 +129,13 @@ export function OAuthCallback() {
     started.current = true;
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
-    if (params.get("error") || !code) {
-      notify(params.get("error") ? t("auth.oauthRejected") : t("auth.oauthMissingCode"), "error");
+    const expected = sessionStorage.getItem("oauth-state");
+    const from = sessionStorage.getItem("oauth-from") || "/account";
+    sessionStorage.removeItem("oauth-state");
+    sessionStorage.removeItem("oauth-from");
+    if (params.get("error") || !code || !expected || params.get("state") !== expected) {
+      // No code → nothing came back; a code with an error or a wrong state → the sign-in was rejected.
+      notify(code || params.get("error") ? t("auth.oauthRejected") : t("auth.oauthMissingCode"), "error");
       navigate("/login", { replace: true });
       return;
     }
@@ -135,7 +144,7 @@ export function OAuthCallback() {
       .then(({ data }) => {
         login(data.token, data.user);
         notify(t("auth.oauthSuccess"));
-        navigate("/account", { replace: true });
+        navigate(from, { replace: true });
       })
       .catch((err) => {
         notify(errorText(err, t, "auth.oauthFailure"), "error");

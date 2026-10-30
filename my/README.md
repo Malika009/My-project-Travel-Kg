@@ -33,6 +33,7 @@ Vite перенаправляет `/api` на `http://localhost:4000`. Если 
 - **Backend** (Render, файл `render.yaml` в корне репозитория): папка `my/server`, `npm ci` → `npm start`, проверка `/api/health`.
   Переменные: `CLIENT_URL=https://travelkg.uk`, `JWT_SECRET` (длинная случайная строка), `ADMIN_EMAIL`, `MONGODB_URI`.
   Для загрузки фото из админки: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` (только на backend).
+  Для входа через Google и GitHub: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`. Адреса возврата для регистрации у провайдера: `https://travelkg.uk/auth/oauth/google` и `https://travelkg.uk/auth/oauth/github`.
   Для писем о бронировании: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`.
 
 Без `MONGODB_URI` данные хранятся в `server/data/store.json` — на бесплатном хостинге этот файл стирается при перезапуске, поэтому для публикации нужна MongoDB (например, бесплатный кластер MongoDB Atlas).

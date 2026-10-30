@@ -133,13 +133,25 @@ const admin = (req, res, next) => req.user?.role === 'admin' ? next() : fail(res
 app.get('/api/health', (req, res) => res.json({ ok: true, storage: mongoMode ? 'mongodb' : 'json' }))
 
 // ---------- OAuth (Google / GitHub) ----------
+// After signing in, Google/GitHub send the visitor back to <site>/auth/oauth/<provider>.
+// <site> is the page the visitor came from (travelkg.uk or localhost) if it is an allowed origin,
+// otherwise OAUTH_REDIRECT_BASE or the first CLIENT_URL. The same address must be registered with the provider.
 const oauthConfig = {
-  google: { clientIdVar: 'GOOGLE_CLIENT_ID', clientSecretVar: 'GOOGLE_CLIENT_SECRET', callbackUrl: 'http://localhost:5173/auth/oauth/google', docsUrl: 'https://developers.google.com/identity/protocols/oauth2', scope: 'openid email profile' },
-  github: { clientIdVar: 'GITHUB_CLIENT_ID', clientSecretVar: 'GITHUB_CLIENT_SECRET', callbackUrl: 'http://localhost:5173/auth/oauth/github', docsUrl: 'https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps', scope: 'user:email' },
+  google: { clientIdVar: 'GOOGLE_CLIENT_ID', clientSecretVar: 'GOOGLE_CLIENT_SECRET', docsUrl: 'https://developers.google.com/identity/protocols/oauth2', scope: 'openid email profile' },
+  github: { clientIdVar: 'GITHUB_CLIENT_ID', clientSecretVar: 'GITHUB_CLIENT_SECRET', docsUrl: 'https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps', scope: 'read:user user:email' },
 }
+const defaultSite = () => (process.env.OAUTH_REDIRECT_BASE || String(process.env.CLIENT_URL || '').split(',')[0] || 'http://localhost:5173').trim().replace(/\/+$/, '')
+const isAllowedSite = (origin) => allowedOrigins.has(origin) || /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)
+function callbackUrl(req, provider) {
+  const origin = String(req.get('origin') || '').replace(/\/+$/, '')
+  const site = origin && isAllowedSite(origin) ? origin : defaultSite()
+  return `${site}/auth/oauth/${provider}`
+}
+const oauthError = (code, message) => Object.assign(new Error(message), { code })
+
 async function createSocialUserFromProfile(provider, profile) {
   const email = String(profile.email || `${provider}-${profile.id}@travelkg.local`).trim().toLowerCase()
-  const name = String(profile.name || profile.login || 'Travel Guest').trim()
+  const name = String(profile.name || profile.login || 'Travel Guest').trim().slice(0, 80)
   const existing = mongoMode ? await User.findOne({ email }) : (await readStore()).users.find(u => u.email === email)
   if (existing) return existing
   const password = await bcrypt.hash(`${provider}-${profile.id}-${Date.now()}-${Math.random().toString(16).slice(2)}`, 10)
@@ -147,49 +159,54 @@ async function createSocialUserFromProfile(provider, profile) {
   if (mongoMode) return new User(user).save()
   return withStore(db => { db.users.unshift({ ...user, createdAt: nowIso() }); return user })
 }
-async function getOAuthProfile(provider, code) {
+
+async function getOAuthProfile(provider, code, redirectUri) {
   const config = oauthConfig[provider]
-  if (!config) throw Object.assign(new Error('Unknown OAuth provider'), { code: 'OAUTH_FAILED' })
+  if (!config) throw oauthError('OAUTH_FAILED', 'Unknown OAuth provider')
   const clientId = process.env[config.clientIdVar], clientSecret = process.env[config.clientSecretVar]
-  if (!clientId || !clientSecret) throw Object.assign(new Error('OAuth not configured'), { code: 'OAUTH_NOT_CONFIGURED' })
-  const body = new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: config.callbackUrl })
+  if (!clientId || !clientSecret) throw oauthError('OAUTH_NOT_CONFIGURED', 'OAuth not configured')
+  const body = new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri })
   if (provider === 'google') {
     body.set('grant_type', 'authorization_code')
     const token = await (await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body })).json()
-    if (!token.access_token) throw Object.assign(new Error(token.error_description || 'Google OAuth failed'), { code: 'OAUTH_FAILED' })
+    if (!token.access_token) throw oauthError('OAUTH_FAILED', token.error_description || token.error || 'Google OAuth failed')
     const user = await (await fetch('https://openidconnect.googleapis.com/v1/userinfo', { headers: { Authorization: `Bearer ${token.access_token}` } })).json()
-    return { id: String(user.sub || user.id || 'google-user'), email: user.email, name: user.name || user.given_name || 'Google User' }
+    // Only a verified address may be linked to an existing account.
+    return { id: String(user.sub || 'google-user'), email: user.email_verified ? user.email : null, name: user.name || user.given_name || 'Google User' }
   }
   const token = await (await fetch('https://github.com/login/oauth/access_token', { method: 'POST', headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' }, body })).json()
-  if (!token.access_token) throw Object.assign(new Error(token.error_description || 'GitHub OAuth failed'), { code: 'OAUTH_FAILED' })
+  if (!token.access_token) throw oauthError('OAUTH_FAILED', token.error_description || token.error || 'GitHub OAuth failed')
   const headers = { Authorization: `Bearer ${token.access_token}`, Accept: 'application/vnd.github+json', 'User-Agent': 'travelkg-app' }
   const user = await (await fetch('https://api.github.com/user', { headers })).json()
-  let email = user.email
-  if (!email) {
-    const emails = await (await fetch('https://api.github.com/user/emails', { headers })).json()
-    email = (Array.isArray(emails) ? emails.find(e => e.primary) || emails[0] : null)?.email
-  }
-  return { id: String(user.id), email: email || `${user.login || 'github'}@travelkg.local`, name: user.name || user.login || 'GitHub User' }
+  const emails = await (await fetch('https://api.github.com/user/emails', { headers })).json().catch(() => [])
+  const verified = Array.isArray(emails) ? emails.find(e => e.primary && e.verified) || emails.find(e => e.verified) : null
+  return { id: String(user.id), email: verified?.email || null, name: user.name || user.login || 'GitHub User', login: user.login }
 }
+
 app.get('/api/auth/oauth/:provider', (req, res) => {
-  const config = oauthConfig[req.params.provider]
+  const { provider } = req.params
+  const config = oauthConfig[provider]
   if (!config) return fail(res, 400, 'OAUTH_FAILED', 'Неизвестный провайдер OAuth')
+  const redirectUri = callbackUrl(req, provider)
   const clientId = process.env[config.clientIdVar], clientSecret = process.env[config.clientSecretVar]
-  if (!clientId || !clientSecret) return res.status(400).json({ code: 'OAUTH_NOT_CONFIGURED', provider: req.params.provider, configured: false, callbackUrl: config.callbackUrl, docsUrl: config.docsUrl, envVars: [config.clientIdVar, config.clientSecretVar] })
-  const q = new URLSearchParams({ client_id: clientId, redirect_uri: config.callbackUrl, scope: config.scope })
-  const authUrl = req.params.provider === 'google'
-    ? `https://accounts.google.com/o/oauth2/v2/auth?${q}&response_type=code&access_type=offline&prompt=consent`
+  if (!clientId || !clientSecret) return res.status(400).json({ code: 'OAUTH_NOT_CONFIGURED', provider, configured: false, callbackUrl: redirectUri, docsUrl: config.docsUrl, envVars: [config.clientIdVar, config.clientSecretVar] })
+  const q = new URLSearchParams({ client_id: clientId, redirect_uri: redirectUri, scope: config.scope })
+  const authUrl = provider === 'google'
+    ? `https://accounts.google.com/o/oauth2/v2/auth?${q}&response_type=code&prompt=select_account`
     : `https://github.com/login/oauth/authorize?${q}&allow_signup=true`
-  res.json({ provider: req.params.provider, configured: true, authUrl, callbackUrl: config.callbackUrl, docsUrl: config.docsUrl })
+  res.json({ provider, configured: true, authUrl, callbackUrl: redirectUri })
 })
 app.get('/api/auth/oauth/:provider/callback', limit(20), async (req, res, next) => {
   try {
     if (!req.query.code) return fail(res, 400, 'OAUTH_FAILED', 'Код OAuth отсутствует')
-    const profile = await getOAuthProfile(req.params.provider, String(req.query.code))
+    const profile = await getOAuthProfile(req.params.provider, String(req.query.code), callbackUrl(req, req.params.provider))
     const user = await createSocialUserFromProfile(req.params.provider, profile)
     res.json({ token: tokenFor(user), user: publicUser(user) })
   } catch (e) {
-    if (e.code?.startsWith?.('OAUTH')) return fail(res, 400, e.code, e.message)
+    if (e.code?.startsWith?.('OAUTH')) {
+      console.error(`OAuth ${req.params.provider} failed:`, e.message)
+      return fail(res, 400, e.code, e.message)
+    }
     next(e)
   }
 })

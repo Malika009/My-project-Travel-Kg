@@ -445,6 +445,14 @@
     }
   ],
   "reviews": [],
-  "messages": [],
+  "messages": [
+    {
+      "_id": "6ae4f01ec16d885b8919ed33",
+      "name": "Малика Арапбаева",
+      "contact": "arapbaevamalika045@gmail.com",
+      "message": "сон куль хочу",
+      "createdAt": "2026-10-30T19:29:34.384Z"
+    }
+  ],
   "seedVersion": 3
 }
