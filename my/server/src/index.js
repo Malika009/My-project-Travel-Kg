@@ -10,7 +10,14 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const app=express(),port=process.env.PORT||4000,__dirname=path.dirname(fileURLToPath(import.meta.url))
-app.use(cors({origin:process.env.CLIENT_URL||'http://localhost:5173'}));app.use(express.json({limit:'1mb'}))
+const corsOrigin = (origin, callback) => {
+  if (!origin || /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) {
+    callback(null, true)
+    return
+  }
+  callback(new Error('CORS origin not allowed'))
+}
+app.use(cors({origin: corsOrigin, credentials: true, methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], allowedHeaders: ['Content-Type','Authorization']}));app.use(express.json({limit:'1mb'}))
 const dbFile=path.resolve(__dirname,'../data/store.json')
 const seedPlaces=[
  {_id:'ala-archa',name:'Национальный парк Ала-Арча',region:'Чуйская область',category:'Горы',rating:4.9,price:1800,duration:'1 день',difficulty:'Легко',image:'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1400&q=85',description:'Мягкие альпийские тропы, панорамный водопад и чистый воздух на фоне снежных вершин Тянь-Шаня. Идеально для первого знакомства с Кыргызстаном.',tag:'ХИТ СЕЗОНА'},

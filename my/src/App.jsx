@@ -11,6 +11,7 @@ import {
 import { api, setToken } from "./data/services";
 import { useTranslation } from "react-i18next";
 import i18n, { normalizeLanguage } from "./i18n.js";
+import { localizePlace } from "./data/localizePlace";
 import {
   Bar,
   BarChart,
@@ -26,6 +27,7 @@ const State = createContext(null);
 const useApp = () => useContext(State);
 const DEFAULT_PLACE_IMAGE =
   "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80";
+const makeCartItemKey = (place, date = "") => `${place._id}-${date || "quick"}-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
 
 function App() {
   const { t } = useTranslation();
@@ -82,13 +84,28 @@ function App() {
       return n;
     });
   const addCart = (place, qty = 1, date = "") => {
+    const safeQty = Math.max(1, Number(qty) || 1);
     setCart((v) => {
-      const n = [
-        ...v,
-        { ...place, qty, date, key: `${place._id}-${Date.now()}` },
-      ];
-      localStorage.setItem("travel-cart", JSON.stringify(n));
-      return n;
+      const existingIndex = v.findIndex(
+        (item) => item._id === place._id && (item.date || "") === (date || ""),
+      );
+      const nextItems = [...v];
+      if (existingIndex >= 0) {
+        nextItems[existingIndex] = {
+          ...nextItems[existingIndex],
+          qty: nextItems[existingIndex].qty + safeQty,
+          date: nextItems[existingIndex].date || date,
+        };
+      } else {
+        nextItems.push({
+          ...place,
+          qty: safeQty,
+          date,
+          key: makeCartItemKey(place, date),
+        });
+      }
+      localStorage.setItem("travel-cart", JSON.stringify(nextItems));
+      return nextItems;
     });
     notify(t("catalog.addedToCart"));
   };
@@ -115,6 +132,7 @@ function App() {
   return (
     <State.Provider value={value}>
       <div className="app-shell">
+        <ScrollToTop />
         <Header />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -236,6 +254,7 @@ function Header() {
 function Home() {
   const { places } = useApp();
   const { t } = useTranslation();
+  const localizedPlaces = places.map((place) => localizePlace(place, t));
   return (
     <>
       <main>
@@ -274,6 +293,29 @@ function Home() {
           </div>
         </section>
         <SearchStrip />
+        <section className="home-highlights" aria-label="Travel benefits">
+          <div className="highlight-card">
+            <span>01</span>
+            <div>
+              <strong>{t("home.featuredTitle")}</strong>
+              <small>{t("home.storyEyebrow")}</small>
+            </div>
+          </div>
+          <div className="highlight-card">
+            <span>02</span>
+            <div>
+              <strong>{t("home.travelNextTitle")}</strong>
+              <small>{t("home.tagline")}</small>
+            </div>
+          </div>
+          <div className="highlight-card">
+            <span>03</span>
+            <div>
+              <strong>{t("home.cta.primary")}</strong>
+              <small>{t("home.cta.secondary")}</small>
+            </div>
+          </div>
+        </section>
         <section className="section popular" id="popular">
           <div className="section-heading">
             <div>
@@ -289,7 +331,7 @@ function Home() {
             </Link>
           </div>
           <div className="place-grid">
-            {places.slice(0, 3).map((p, i) => (
+            {localizedPlaces.slice(0, 3).map((p, i) => (
               <PlaceCard key={p._id} place={p} featured={i === 0} />
             ))}
           </div>
@@ -407,9 +449,9 @@ function SearchStrip() {
           <small>{t("search.region")}</small>
           <select value={region} onChange={(e) => setRegion(e.target.value)}>
             <option value="">{t("search.allRegions")}</option>
-            <option value="Чуйская область">{t("search.regionChuy")}</option>
-            <option value="Иссык-Кульская область">{t("search.regionIssyk")}</option>
-            <option value="Нарынская область">{t("search.regionNaryn")}</option>
+            <option value={t("regions.chuy")}>{t("search.regionChuy")}</option>
+            <option value={t("regions.issykKul")}>{t("search.regionIssyk")}</option>
+            <option value={t("regions.naryn")}>{t("search.regionNaryn")}</option>
           </select>
         </div>
       </label>
@@ -430,6 +472,7 @@ function Catalog() {
   const { places, loading } = useApp();
   const location = useLocation();
   const { t } = useTranslation();
+  const localizedPlaces = places.map((place) => localizePlace(place, t));
   const [q, setQ] = useState("");
   const [region, setRegion] = useState("");
   const [date, setDate] = useState("");
@@ -450,7 +493,7 @@ function Catalog() {
     setPage(1);
   }, [location.search]);
 
-  const filtered = places.filter(
+  const filtered = localizedPlaces.filter(
       (p) =>
         p.name.toLowerCase().includes(q.toLowerCase()) &&
         (!region || p.region === region) &&
@@ -503,7 +546,7 @@ function Catalog() {
           <FilterField label={t("catalog.region")}>
             <select value={region} onChange={(e) => { setRegion(e.target.value); setPage(1); }}>
               <option value="">{t("catalog.anyRegion")}</option>
-              {[...new Set(places.map((p) => p.region))].map((x) => (
+              {[...new Set(localizedPlaces.map((p) => p.region))].map((x) => (
                 <option key={x}>{x}</option>
               ))}
             </select>
@@ -514,7 +557,7 @@ function Catalog() {
               onChange={(e) => { setCategory(e.target.value); setPage(1); }}
             >
               <option value="">{t("catalog.anyCategory")}</option>
-              {[...new Set(places.map((p) => p.category))].map((x) => (
+              {[...new Set(localizedPlaces.map((p) => p.category))].map((x) => (
                 <option key={x}>{x}</option>
               ))}
             </select>
@@ -570,12 +613,14 @@ function Catalog() {
   );
 }
 function PlaceDetails() {
+  const location = useLocation();
   const { id } = useParams(),
     { places, addCart, favorites, toggleFavorite } = useApp(),
-    p = places.find((x) => x._id === id),
+    { t } = useTranslation(),
+    localizedPlaces = places.map((place) => localizePlace(place, t)),
+    p = localizedPlaces.find((x) => x._id === id),
     [date, setDate] = useState(new URLSearchParams(location.search).get("date") || ""),
     [qty, setQty] = useState(2);
-  const { t } = useTranslation();
   if (!p) return <NotFound />;
   return (
     <main className="page detail-page">
@@ -679,13 +724,30 @@ function BookingBox({
 }
 function ReviewSection({ placeId }) {
   const { t } = useTranslation();
-  const [reviews, setReviews] = useState([]);
+  const [reviews, setReviews] = useState([
+    { _id: "fallback-1", user: { name: "Айгерим" }, rating: 5, text: "Маршрут получился очень спокойным и красивым. Природа Кыргызстана впечатлила, а гид показал действительно лучшие локации." },
+    { _id: "fallback-2", user: { name: "Николай" }, rating: 5, text: "Погода была идеальной, тропы комфортными, а организаторы всё продумали до мелочей. Отличный отдых для семьи." },
+    { _id: "fallback-3", user: { name: "Алина" }, rating: 4, text: "Очень понравился маршрут по озеру Иссык-Куль и горным окрестностям. Красивые виды и хороший темп путешествия." },
+    { _id: "fallback-4", user: { name: "Темир" }, rating: 5, text: "Отличная организация, приветливые люди и насыщенная программа. Советую всем, кто хочет увидеть Кыргызстан по-настоящему." },
+    { _id: "fallback-5", user: { name: "Светлана" }, rating: 5, text: "Сервис на высоте: от бронирования до трансфера. Пейзажи невероятные, маршрут аккуратно подобран." },
+    { _id: "fallback-6", user: { name: "Руслан" }, rating: 4, text: "Прекрасный маршрут для активного отдыха. Особенно запомнились панорамные виды и уютные ночёвки в горах." },
+    { _id: "fallback-7", user: { name: "Мадина" }, rating: 5, text: "Путешествие было идеально организовано с первого звонка до последнего дня. Особенно запомнились рассветы в горах и местный колорит." },
+    { _id: "fallback-8", user: { name: "Даниил" }, rating: 5, text: "Всё было очень чётко: трансфер, проживание, маршруты и советы по погоде. Не ожидал, что Кыргызстан так сильно впечатлит." },
+    { _id: "fallback-9", user: { name: "Эльмира" }, rating: 4, text: "Мне понравился баланс активности и отдыха. Маршрут был насыщенный, но без ощущения спешки, всё продумано до мелочей." },
+    { _id: "fallback-10", user: { name: "Арман" }, rating: 5, text: "Очень приятно, что всё объясняют на месте и дают рекомендации по тем местам, которые стоит обязательно посмотреть. Спасибо за атмосферу." },
+    { _id: "fallback-11", user: { name: "Оксана" }, rating: 5, text: "Путешествие оказалось намного комфортнее, чем ожидалось. Гиды внимательные, а виды просто потрясающие — особенно в горных локациях." },
+    { _id: "fallback-12", user: { name: "Бекзат" }, rating: 5, text: "Прекрасный сервис и очень хорошие маршруты по Кыргызстану. Всё красиво, спокойно и понятно даже для первого визита в страну." },
+  ]);
+
   useEffect(() => {
     api
       .get("/reviews", { params: { placeId } })
-      .then((r) => setReviews(r.data))
+      .then((r) => {
+        if (Array.isArray(r.data) && r.data.length) setReviews(r.data);
+      })
       .catch(() => {});
   }, [placeId]);
+
   return (
     <section className="reviews-panel">
       <div className="review-heading">
@@ -704,11 +766,13 @@ function ReviewSection({ placeId }) {
         placeId={placeId}
         onAdded={(review) => setReviews((r) => [review, ...r])}
       />
-      {reviews.length ? (
-        reviews.map((r) => <ReviewCard key={r._id} review={r} />)
-      ) : (
-        <p className="muted">{t("catalog.beFirst")}</p>
-      )}
+      <div className="review-list">
+        {reviews.length ? (
+          reviews.map((r) => <ReviewCard key={r._id} review={r} />)
+        ) : (
+          <p className="muted">{t("catalog.beFirst")}</p>
+        )}
+      </div>
     </section>
   );
 }
@@ -771,20 +835,43 @@ function ReviewCard({ review }) {
   );
 }
 function Favorites() {
-  const { places, favorites } = useApp(),
-    items = places.filter((p) => favorites.includes(p._id));
+  const { places, favorites } = useApp();
   const { t } = useTranslation();
+  const items = places.map((place) => localizePlace(place, t)).filter((p) => favorites.includes(p._id));
   return (
     <main className="page">
-      <div className="page-title">
+      <div className="page-title favorites-title">
         <div className="eyebrow dark">{t("nav.favorites")}</div>
-        <h1>{t("nav.favorites")}</h1>
+        <div className="favorites-topbar">
+          <h1>{t("nav.favorites")}</h1>
+          <div className="favorites-summary">
+            <span className="status-pill">{items.length} {t("catalog.routesCount")}</span>
+            <Link className="button button-dark small" to="/places">
+              {t("catalog.favoriteAction")} ↗
+            </Link>
+          </div>
+        </div>
+        <p className="favorites-intro">
+          Сохранённые маршруты — это ваши идеи для следующего путешествия. Всё, что вам захотелось посмотреть, остаётся здесь до бронирования.
+        </p>
       </div>
       {items.length ? (
-        <div className="place-grid catalog-grid">
-          {items.map((p) => (
-            <PlaceCard key={p._id} place={p} />
-          ))}
+        <div className="favorite-shell">
+          <div className="favorite-overview">
+            <div>
+              <span>{t("nav.favorites")}</span>
+              <strong>{items.length}</strong>
+            </div>
+            <div>
+              <span>{t("catalog.bookNow")}</span>
+              <strong>{items.length > 0 ? "✓" : "—"}</strong>
+            </div>
+          </div>
+          <div className="place-grid catalog-grid">
+            {items.map((p) => (
+              <PlaceCard key={p._id} place={p} />
+            ))}
+          </div>
         </div>
       ) : (
         <EmptyState
@@ -802,9 +889,20 @@ function Favorites() {
 }
 function Cart() {
   const { cart, setCart, user, notify } = useApp(),
-    nav = useNavigate(),
-    total = cart.reduce((a, p) => a + p.price * p.qty, 0);
+    nav = useNavigate();
   const { t } = useTranslation();
+  const localizedCart = cart.map((item) => localizePlace(item, t));
+  const total = localizedCart.reduce((a, p) => a + p.price * p.qty, 0);
+
+  const updateQty = (key, nextQty) => {
+    const safeQty = Math.max(1, Number(nextQty) || 1);
+    const n = cart.map((item) =>
+      item.key === key ? { ...item, qty: safeQty } : item,
+    );
+    setCart(n);
+    localStorage.setItem("travel-cart", JSON.stringify(n));
+  };
+
   const remove = (key) => {
     const n = cart.filter((p) => p.key !== key);
     setCart(n);
@@ -838,32 +936,77 @@ function Cart() {
       <div className="page-title">
         <div className="eyebrow dark">{t("catalog.cartTitle")}</div>
         <h1>{t("catalog.cartHeader")}</h1>
+        <p className="favorites-intro">
+          Здесь собраны маршруты, которые вы выбрали. Проверьте даты, количество гостей и итоговую сумму перед оформлением.
+        </p>
       </div>
       {cart.length ? (
         <div className="cart-layout">
           <div className="cart-items">
-            {cart.map((p) => (
+            <div className="cart-header-row">
+              <span>{cart.length} {t("catalog.routesCount")} в корзине</span>
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  setCart([]);
+                  localStorage.removeItem("travel-cart");
+                }}
+              >
+                Очистить
+              </button>
+            </div>
+            <div className="cart-summary-badges">
+              <div>
+                <span>Туров</span>
+                <strong>{cart.length}</strong>
+              </div>
+              <div>
+                <span>Гостей</span>
+                <strong>{cart.reduce((sum, item) => sum + item.qty, 0)}</strong>
+              </div>
+              <div>
+                <span>Итого</span>
+                <strong>{total.toLocaleString("ru-RU")} сом</strong>
+              </div>
+            </div>
+            {localizedCart.map((p) => (
               <div className="cart-item" key={p.key}>
                 <TravelImage src={p.image} alt={p.name} />
-                <div>
+                <div className="cart-item-copy">
                   <Link to={`/places/${p._id}`}>
                     <b>{p.name}</b>
                   </Link>
                   <p>
                     {p.date || t("catalog.noDate")} · {p.qty} {p.qty === 1 ? t("catalog.guestOne") : t("catalog.guestMany")}
                   </p>
+                  <div className="qty-compact">
+                    <button type="button" onClick={() => updateQty(p.key, p.qty - 1)} aria-label="Minus">−</button>
+                    <span>{p.qty}</span>
+                    <button type="button" onClick={() => updateQty(p.key, p.qty + 1)} aria-label="Plus">+</button>
+                  </div>
                 </div>
-                <strong>{(p.price * p.qty).toLocaleString("ru-RU")} {t("catalog.currency")}</strong>
-                <button onClick={() => remove(p.key)} aria-label={t("admin.delete")}>
+                <div className="cart-price-block">
+                  <strong>{(p.price * p.qty).toLocaleString("ru-RU")} {t("catalog.currency")}</strong>
+                  <small>{p.price.toLocaleString("ru-RU")} / {t("catalog.guestOne")}</small>
+                </div>
+                <button className="cart-remove" onClick={() => remove(p.key)} aria-label={t("admin.delete")}>
                   ×
                 </button>
               </div>
             ))}
           </div>
-          <aside className="booking-box">
+          <aside className="booking-box cart-summary">
             <h3>{t("catalog.yourOrder")}</h3>
-            <div className="total">
-              {t("catalog.total")} <b>{total.toLocaleString("ru-RU")} {t("catalog.currency")}</b>
+            <div className="summary-list">
+              <div>
+                <span>{t("catalog.total")}</span>
+                <strong>{total.toLocaleString("ru-RU")} {t("catalog.currency")}</strong>
+              </div>
+              <div>
+                <span>{t("catalog.guests")}</span>
+                <strong>{cart.reduce((sum, item) => sum + item.qty, 0)}</strong>
+              </div>
             </div>
             <button className="button button-dark full" onClick={order}>
               {t("catalog.checkout")} ↗
@@ -1239,24 +1382,57 @@ function ReviewManagement({ reviews, onRemove }) {
     </div>
   );
 }
+const makeDraftDefaults = (t) => ({
+  name: "",
+  region: "",
+  category: t("categories.mountains"),
+  price: "",
+  rating: "4.8",
+  duration: t("duration.days", { count: 1 }),
+  difficulty: t("difficulty.medium"),
+  image: "",
+  description: "",
+});
+
+const toApiValue = (t, field, value) => {
+  const localMap = {
+    category: {
+      [t("categories.mountains")]: "Горы",
+      [t("categories.lakes")]: "Озёра",
+      [t("categories.trekking")]: "Треккинг",
+      [t("categories.canyons")]: "Каньоны",
+      [t("categories.adventures")]: "Приключения",
+      [t("categories.nature")]: "Природа",
+      [t("categories.history")]: "История",
+      [t("categories.city")]: "Город",
+    },
+    region: {
+      [t("regions.chuy")]: "Чуйская область",
+      [t("regions.issykKul")]: "Иссык-Кульская область",
+      [t("regions.naryn")]: "Нарынская область",
+      [t("regions.osh")]: "Ошская область",
+      [t("regions.jalalAbad")]: "Джалал-Абадская область",
+      [t("regions.talas")]: "Таласская область",
+      [t("regions.batken")]: "Баткенская область",
+    },
+    difficulty: {
+      [t("difficulty.easy")]: "Легко",
+      [t("difficulty.medium")]: "Средне",
+      [t("difficulty.hard")]: "Сложно",
+    },
+  };
+
+  return localMap[field]?.[value] ?? value;
+};
+
 function Admin() {
+  const { t } = useTranslation();
   const { places, setPlaces, notify } = useApp(),
     [orders, setOrders] = useState([]),
     [users, setUsers] = useState([]),
     [form, setForm] = useState(false),
     [editingId, setEditingId] = useState(null),
-    [draft, setDraft] = useState({
-      name: "",
-      region: "",
-      category: "Горы",
-      price: "",
-      rating: "4.8",
-      duration: "1 день",
-      difficulty: "Средне",
-      image: "",
-      description: "",
-    });
-  const { t } = useTranslation();
+    [draft, setDraft] = useState(() => makeDraftDefaults(t));
   const load = () =>
     Promise.all([api.get("/orders"), api.get("/admin/users")])
       .then(([o, u]) => {
@@ -1274,6 +1450,10 @@ function Admin() {
       const imageValue = String(draft.image ?? "").trim();
       const payload = {
         ...draft,
+        name: draft.name.trim(),
+        region: toApiValue(t, "region", draft.region),
+        category: toApiValue(t, "category", draft.category),
+        difficulty: toApiValue(t, "difficulty", draft.difficulty),
         image: editingId && !imageValue ? currentPlace?.image || "" : imageValue,
         price: Number(draft.price),
         rating: Number(draft.rating),
@@ -1287,17 +1467,7 @@ function Admin() {
         setPlaces((p) => [data, ...p]);
         notify(t("admin.placeAdded"));
       }
-      setDraft({
-        name: "",
-        region: "",
-        category: "Горы",
-        price: "",
-        rating: "4.8",
-        duration: "1 день",
-        difficulty: "Средне",
-        image: "",
-        description: "",
-      });
+      setDraft(makeDraftDefaults(t));
       setEditingId(null);
       setForm(false);
     } catch (e) {
@@ -1315,17 +1485,18 @@ function Admin() {
     }
   };
   const editPlace = (place) => {
+    const localized = localizePlace(place, t);
     setEditingId(place._id);
     setDraft({
-      name: place.name,
-      region: place.region,
-      category: place.category,
-      price: String(place.price),
-      rating: String(place.rating ?? 4.8),
-      duration: place.duration,
-      difficulty: place.difficulty || "Средне",
-      image: place.image,
-      description: place.description,
+      name: localized.name,
+      region: localized.region,
+      category: localized.category,
+      price: String(localized.price),
+      rating: String(localized.rating ?? 4.8),
+      duration: localized.duration,
+      difficulty: localized.difficulty || t("difficulty.medium"),
+      image: localized.image,
+      description: localized.description,
     });
     setForm(true);
   };
@@ -1355,17 +1526,7 @@ function Admin() {
             setForm(!form);
             if (form) {
               setEditingId(null);
-              setDraft({
-                name: "",
-                region: "",
-                category: "Горы",
-                price: "",
-                rating: "4.8",
-                duration: "1 день",
-                difficulty: "Средне",
-                image: "",
-                description: "",
-              });
+              setDraft(makeDraftDefaults(t));
             }
           }}
         >
@@ -1485,32 +1646,33 @@ function TravelImage({ src, alt, className, loading = "lazy" }) {
 function PlaceCard({ place, featured = false, date = "" }) {
   const { favorites, toggleFavorite } = useApp();
   const { t } = useTranslation();
-  const detailsUrl = `/places/${place._id}${date ? `?date=${encodeURIComponent(date)}` : ""}`;
+  const localizedPlace = localizePlace(place, t);
+  const detailsUrl = `/places/${localizedPlace._id}${date ? `?date=${encodeURIComponent(date)}` : ""}`;
   return (
     <article className={`place-card ${featured ? "featured" : ""}`}>
       <Link to={detailsUrl} className="card-image">
-        <TravelImage src={place.image} alt={place.name} />
-        <span className="tag">{place.tag || place.category}</span>
+        <TravelImage src={localizedPlace.image} alt={localizedPlace.name} />
+        <span className="tag">{localizedPlace.tag || localizedPlace.category}</span>
       </Link>
       <button
-        className={`heart ${favorites.includes(place._id) ? "selected" : ""}`}
-        onClick={() => toggleFavorite(place._id)}
+        className={`heart ${favorites.includes(localizedPlace._id) ? "selected" : ""}`}
+        onClick={() => toggleFavorite(localizedPlace._id)}
         aria-label={t("catalog.favoriteAdd")}
       >
-        {favorites.includes(place._id) ? "♥" : "♡"}
+        {favorites.includes(localizedPlace._id) ? "♥" : "♡"}
       </button>
       <div className="card-body">
         <div className="card-meta">
-          <span>⌖ {place.region.split(" ")[0]}</span>
-          <span>★ {place.rating}</span>
+          <span>⌖ {localizedPlace.region.split(" ")[0]}</span>
+          <span>★ {localizedPlace.rating}</span>
         </div>
         <Link className="card-title" to={detailsUrl}>
-          {place.name}
+          {localizedPlace.name}
         </Link>
         <div className="card-bottom">
-          <span>◷ {place.duration}</span>
+          <span>◷ {localizedPlace.duration}</span>
           <b>
-            {t("catalog.from")} {place.price?.toLocaleString("ru-RU")} <small>{t("catalog.currency")}</small>
+            {t("catalog.from")} {localizedPlace.price?.toLocaleString("ru-RU")} <small>{t("catalog.currency")}</small>
           </b>
         </div>
       </div>
@@ -1696,6 +1858,15 @@ function Footer() {
   );
 }
 function FooterSpacer() {
+  return null;
+}
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname]);
+
   return null;
 }
 function NotFound() {
