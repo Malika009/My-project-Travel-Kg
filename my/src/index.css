@@ -1,68 +1,260 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+/* Fonts with full Kyrgyz support (ң ө ү): Manrope — text, Unbounded — headings, Lora — accents. */
+@import url("https://fonts.googleapis.com/css2?family=Lora:ital,wght@1,500;1,600&family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;600;700&display=swap");
+
 :root {
-  font-family: "DM Sans", sans-serif;
-  color: #202522;
-  background: #f7f1e7;
+  --font-body: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Unbounded", "Manrope", system-ui, sans-serif;
+  --font-accent: "Lora", Georgia, serif;
+
+  --bg: #f7f3ec;
+  --surface: #ffffff;
+  --surface-2: #f1ebe0;
+  --surface-3: #e9e1d3;
+  --ink: #15211c;
+  --ink-soft: #2c3a33;
+  --muted: #5d6a63;
+  --line: #e2d9c9;
+  --primary: #1d6b51;
+  --primary-strong: #145240;
+  --primary-soft: #dcefe5;
+  --on-primary: #ffffff;
+  --accent: #df6f32;
+  --accent-soft: #fbe5d6;
+  --gold: #f0b23b;
+  --danger: #c0392b;
+  --danger-soft: #fbe3df;
+  --success: #1d8a5a;
+  --warning: #c98a12;
+  --shadow-sm: 0 1px 2px rgb(21 33 28 / 6%), 0 2px 8px rgb(21 33 28 / 5%);
+  --shadow-md: 0 8px 24px rgb(21 33 28 / 9%), 0 2px 6px rgb(21 33 28 / 5%);
+  --shadow-lg: 0 24px 60px rgb(21 33 28 / 16%);
+  --radius-sm: 12px;
+  --radius: 18px;
+  --radius-lg: 28px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --container: 1280px;
+  --header-h: 72px;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  color-scheme: light;
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  font-optical-sizing: auto;
-  font-weight: 400;
-  --ink: #202522;
-  --paper: #f7f1e7;
-  --muted: #7d756c;
-  --line: #e7dcc8;
-  --green: #496a50;
-  --sage: #e5ddcf;
-  --orange: #c7895e;
+  -moz-osx-font-smoothing: grayscale;
 }
-* {
+
+[data-theme="dark"] {
+  --bg: #0d1311;
+  --surface: #151d1a;
+  --surface-2: #1b2522;
+  --surface-3: #24302b;
+  --ink: #edf3ef;
+  --ink-soft: #d3ddd7;
+  --muted: #9cada5;
+  --line: #2a3632;
+  --primary: #4cc08f;
+  --primary-strong: #72d6aa;
+  --primary-soft: #183a2e;
+  --on-primary: #08130e;
+  --accent: #f28c52;
+  --accent-soft: #3b271b;
+  --danger: #f07a6a;
+  --danger-soft: #3a1f1b;
+  --success: #4cc08f;
+  --warning: #f0b23b;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-md: 0 10px 28px rgb(0 0 0 / 35%);
+  --shadow-lg: 0 24px 60px rgb(0 0 0 / 50%);
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
+
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + 16px);
+  -webkit-text-size-adjust: 100%;
 }
+
 body {
   margin: 0;
-  min-width: 360px;
-  background: var(--paper);
+  min-width: 320px;
+  background: var(--bg);
+  color: var(--ink);
+  overflow-x: hidden;
+  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
 }
-button,
-input,
-select,
-textarea {
-  font: inherit;
+
+body.no-scroll {
+  overflow: hidden;
 }
-button,
-a,
-select {
-  cursor: pointer;
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5em;
+  color: var(--ink);
+  overflow-wrap: break-word;
+  hyphens: manual;
 }
+
+h1 { font-size: clamp(2rem, 1.3rem + 3vw, 3.6rem); }
+h2 { font-size: clamp(1.6rem, 1.15rem + 1.9vw, 2.6rem); }
+h3 { font-size: clamp(1.08rem, 1rem + 0.35vw, 1.25rem); }
+
+h1 em,
+h2 em,
+h3 em {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--primary);
+}
+
+p {
+  margin: 0 0 1em;
+}
+
 a {
   color: inherit;
   text-decoration: none;
 }
-button {
-  color: inherit;
-}
+
 img {
   max-width: 100%;
   display: block;
   height: auto;
 }
-em {
-  font-family: Georgia, serif;
-  font-weight: 400;
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
 }
+
+button,
+select,
+label[for],
+summary {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 55%, transparent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
 ::selection {
-  background: #c9d8c6;
-  color: #172218;
+  background: var(--primary-soft);
+  color: var(--ink);
 }
-[data-theme="dark"] {
-  --ink: #edf0e9;
-  --paper: #171b18;
-  --muted: #a0a69f;
-  --line: #333a34;
-  --green: #9bb995;
-  --sage: #313b32;
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+select {
+  appearance: none;
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235d6a63' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+input[type="checkbox"] {
+  width: 20px;
+  min-height: 20px;
+  height: 20px;
+  padding: 0;
+  accent-color: var(--primary);
+  flex: none;
+}
+
+input[type="range"] {
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  accent-color: var(--primary);
+  box-shadow: none;
+}
+
+input[type="date"] {
+  min-width: 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    font-size: 16px;
+    --header-h: 64px;
+  }
 }

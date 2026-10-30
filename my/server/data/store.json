@@ -24,7 +24,7 @@
     },
     {
       "_id": "pio-peak",
-      "name": "Пик Ленина и Меридиональная тропа",
+      "name": "Пик Ленина: базовый лагерь Ачик-Таш",
       "region": "Ошская область",
       "category": "Горы",
       "rating": 4.8,
@@ -50,7 +50,7 @@
     },
     {
       "_id": "lenin-trail",
-      "name": "Тянь-Шаньский маршрут к озеру Кель-Суу",
+      "name": "Перевал Кегети: треккинг из Чуйской долины",
       "region": "Чуйская область",
       "category": "Горы",
       "rating": 4.9,
@@ -103,7 +103,7 @@
     {
       "_id": "kashka-suu",
       "name": "Озеро Кашка-Суу и горный отдых",
-      "region": "Ошская область",
+      "region": "Чуйская область",
       "category": "Озёра",
       "rating": 4.7,
       "price": 4600,
@@ -194,7 +194,7 @@
     {
       "_id": "jeti-oguz",
       "name": "Каньон Джети-Огуз",
-      "region": "Таласская область",
+      "region": "Иссык-Кульская область",
       "category": "Каньоны",
       "rating": 4.9,
       "price": 4300,
@@ -219,7 +219,7 @@
     },
     {
       "_id": "sary-chet",
-      "name": "Саймалык каньон Сары-Чет",
+      "name": "Каньоны реки Нарын",
       "region": "Нарынская область",
       "category": "Каньоны",
       "rating": 4.8,
@@ -294,6 +294,136 @@
       "image": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1400&q=85",
       "description": "Для тех, кто любит движение и активный стиль: крутые спуски, первая линия вида на хребты и ночёвка у горного лагеря.",
       "tag": "ВЕЛОАДРЕНАЛИН"
+    },
+    {
+      "_id": "karakol",
+      "name": "Каракол и ущелья Тянь-Шаня",
+      "region": "Иссык-Кульская область",
+      "category": "Горы",
+      "rating": 4.9,
+      "price": 4900,
+      "duration": "2 дня",
+      "difficulty": "Средне",
+      "image": "https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=1400&q=85",
+      "description": "Исследуйте старый Каракол, горные ущелья и лесные тропы у подножия Тянь-Шаня с местным гидом.",
+      "tag": "ГОРОД И ГОРЫ"
+    },
+    {
+      "_id": "sary-chelek",
+      "name": "Озеро Сары-Челек",
+      "region": "Джалал-Абадская область",
+      "category": "Озёра",
+      "rating": 4.9,
+      "price": 6200,
+      "duration": "3 дня",
+      "difficulty": "Средне",
+      "image": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1400&q=85",
+      "description": "Заповедное горное озеро среди ореховых лесов, тихие бухты и прогулки по биосферному заповеднику.",
+      "tag": "БИОСФЕРНЫЙ ЗАПОВЕДНИК"
+    },
+    {
+      "_id": "arslanbob",
+      "name": "Ореховые леса Арсланбоба",
+      "region": "Джалал-Абадская область",
+      "category": "Природа",
+      "rating": 4.8,
+      "price": 5100,
+      "duration": "2 дня",
+      "difficulty": "Легко",
+      "image": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1400&q=85",
+      "description": "Прогулка по крупнейшим ореховым лесам, водопады и знакомство с гостеприимной культурой местных жителей.",
+      "tag": "ЛЕС И ВОДОПАДЫ"
+    },
+    {
+      "_id": "tash-rabat",
+      "name": "Караван-сарай Таш-Рабат",
+      "region": "Нарынская область",
+      "category": "История",
+      "rating": 4.9,
+      "price": 5800,
+      "duration": "2 дня",
+      "difficulty": "Легко",
+      "image": "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1400&q=85",
+      "description": "Средневековый каменный караван-сарай на Великом шёлковом пути и просторные высокогорные долины вокруг него.",
+      "tag": "ШЁЛКОВЫЙ ПУТЬ"
+    },
+    {
+      "_id": "kel-suu",
+      "name": "Озеро Кель-Суу",
+      "region": "Нарынская область",
+      "category": "Озёра",
+      "rating": 5,
+      "price": 7900,
+      "duration": "3 дня",
+      "difficulty": "Средне",
+      "image": "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?auto=format&fit=crop&w=1400&q=85",
+      "description": "Бирюзовое озеро среди отвесных скал Нарына. Маршрут включает поездку по высокогорной долине и прогулку у воды.",
+      "tag": "ВЫСОКОГОРНОЕ ОЗЕРО"
+    },
+    {
+      "_id": "burana",
+      "name": "Башня Бурана и древний Баласагун",
+      "region": "Чуйская область",
+      "category": "История",
+      "rating": 4.7,
+      "price": 1800,
+      "duration": "1 день",
+      "difficulty": "Легко",
+      "image": "https://images.unsplash.com/photo-1501555088652-021faa106b9b?auto=format&fit=crop&w=1400&q=85",
+      "description": "Узнайте историю средневекового города Баласагун, поднимитесь к минарету Бурана и осмотрите древние каменные изваяния.",
+      "tag": "ИСТОРИЯ КЫРГЫЗСТАНА"
+    },
+    {
+      "_id": "bishkek",
+      "name": "Бишкек: город, парки и базары",
+      "region": "Чуйская область",
+      "category": "Город",
+      "rating": 4.7,
+      "price": 1500,
+      "duration": "1 день",
+      "difficulty": "Легко",
+      "image": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=85",
+      "description": "Прогулка по зелёным бульварам, центральным площадям и колоритным рынкам столицы в сопровождении местного гида.",
+      "tag": "СТОЛИЦА И КУЛЬТУРА"
+    },
+    {
+      "_id": "chunkurchak",
+      "name": "Ущелье Чункурчак",
+      "region": "Чуйская область",
+      "category": "Горы",
+      "rating": 4.8,
+      "price": 2300,
+      "duration": "1 день",
+      "difficulty": "Легко",
+      "image": "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1400&q=85",
+      "description": "Недалеко от Бишкека вас ждут хвойные леса, горные луга, панорамные виды и лёгкие маршруты на свежем воздухе.",
+      "tag": "РЯДОМ С БИШКЕКОМ"
+    },
+    {
+      "_id": "altyn-arashan",
+      "name": "Алтын-Арашан и горячие источники",
+      "region": "Иссык-Кульская область",
+      "category": "Треккинг",
+      "rating": 4.9,
+      "price": 4800,
+      "duration": "2 дня",
+      "difficulty": "Средне",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Yurts_in_Altyn_Arashan%2C_Kyrgyzstan.jpg/1280px-Yurts_in_Altyn_Arashan%2C_Kyrgyzstan.jpg",
+      "description": "Пеший маршрут по хвойному ущелью к высокогорной долине с юртами и горячими радоновыми источниками у подножия пика Палатка.",
+      "tag": "ГОРЯЧИЕ ИСТОЧНИКИ"
+    },
+    {
+      "_id": "barskoon",
+      "name": "Водопады Барскоона",
+      "region": "Иссык-Кульская область",
+      "category": "Природа",
+      "rating": 4.8,
+      "price": 2600,
+      "duration": "1 день",
+      "difficulty": "Легко",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Manas_Bowl_Waterfall_%284%29.jpg/1280px-Manas_Bowl_Waterfall_%284%29.jpg",
+      "description": "Живописное ущелье на южном берегу Иссык-Куля: каскад водопадов «Слёзы барса», памятник Гагарину и виды на ледники.",
+      "tag": "ВОДОПАДЫ И ЛЕДНИКИ"
     }
   ],
   "orders": [
@@ -314,5 +444,7 @@
       "createdAt": "2026-10-27T12:02:00.796Z"
     }
   ],
-  "reviews": []
+  "reviews": [],
+  "messages": [],
+  "seedVersion": 3
 }

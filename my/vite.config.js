@@ -1,16 +1,13 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
+// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  optimizeDeps: {
-    include: ['react', 'react-dom/client', 'react-router-dom', 'axios', 'i18next', 'react-i18next', 'recharts'],
-  },
   server: {
-    host: '0.0.0.0',
-    strictPort: true,
     proxy: {
-      '/api': { target: 'http://localhost:4000', changeOrigin: true },
+      // API_PROXY lets you point the dev server at another backend port.
+      '/api': { target: process.env.API_PROXY || 'http://localhost:4000', changeOrigin: true },
     },
   },
 })
