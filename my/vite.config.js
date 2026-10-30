@@ -6,7 +6,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': { target: 'http://localhost:4000', changeOrigin: true },
+      // API_PROXY lets you point the dev server at another backend port.
+      '/api': { target: process.env.API_PROXY || 'http://localhost:4000', changeOrigin: true },
     },
   },
 })

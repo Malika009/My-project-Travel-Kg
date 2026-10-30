@@ -1,45 +1,58 @@
-const categoryMap = {
-  Горы: "mountains",
-  Озёра: "lakes",
-  Треккинг: "trekking",
-  Каньоны: "canyons",
-  Приключения: "adventures",
-  Природа: "nature",
-  История: "history",
-  Город: "city",
-};
+import i18n from "../i18n.js";
+import { CATEGORY_KEYS, DIFFICULTY_KEYS, REGION_KEYS, baseDaysOf } from "./tourInfo";
 
-const regionMap = {
-  "Чуйская область": "chuy",
-  "Иссык-Кульская область": "issykKul",
-  "Нарынская область": "naryn",
-  "Ошская область": "osh",
-  "Джалал-Абадская область": "jalalAbad",
-  "Таласская область": "talas",
-  "Баткенская область": "batken",
-};
-
-const difficultyMap = {
-  Легко: "easy",
-  Средне: "medium",
-  Сложно: "hard",
-};
-
+/**
+ * Returns the tour with every visible text in the current language.
+ * Raw API values stay available as regionKey / categoryKey / difficultyKey (use them for filtering).
+ */
 export function localizePlace(place, t) {
   if (!place) return place;
-
-  const daysMatch = Number.parseInt(String(place.duration || "1").match(/\d+/)?.[0] || "1", 10);
-  const localizedCategoryKey = categoryMap[place.category] || "nature";
-  const localized = {
+  const id = place._id;
+  const categoryKey = CATEGORY_KEYS[place.category] || "nature";
+  const regionKey = REGION_KEYS[place.region] || "";
+  const difficultyKey = DIFFICULTY_KEYS[place.difficulty] || "medium";
+  const days = baseDaysOf(place);
+  // Tours added in the admin panel carry their own translations.
+  const own = (i18n.language !== "ru" && place.translations?.[i18n.language]) || {};
+  return {
     ...place,
-    name: t(`tours.${place._id}.name`, { defaultValue: place.name }),
-    description: t(`tours.${place._id}.description`, { defaultValue: place.description }),
-    region: t(`regions.${regionMap[place.region] || "unknown"}`, { defaultValue: place.region }),
-    category: t(`categories.${localizedCategoryKey}`, { defaultValue: place.category }),
-    tag: t(`categories.${localizedCategoryKey}`, { defaultValue: place.tag || place.category }),
-    difficulty: t(`difficulty.${difficultyMap[place.difficulty] || "medium"}`, { defaultValue: place.difficulty }),
-    duration: t("duration.days", { count: daysMatch, defaultValue: place.duration }),
+    categoryKey,
+    regionKey,
+    difficultyKey,
+    days,
+    name: t(`tours.${id}.name`, { defaultValue: own.name || place.name }),
+    description: t(`tours.${id}.description`, { defaultValue: own.description || place.description }),
+    region: regionKey ? t(`regions.${regionKey}`) : place.region,
+    category: t(`categories.${categoryKey}`, { defaultValue: place.category }),
+    tag: t(`tours.${id}.tag`, { defaultValue: own.tag || (i18n.language === "ru" && place.tag) || t(`categories.${categoryKey}`) }),
+    difficulty: t(`difficulty.${difficultyKey}`),
+    duration: t("duration.days", { count: days }),
   };
-
-  return localized;
 }
+
+export const localizeRegion = (region, t) =>
+  REGION_KEYS[region] ? t(`regions.${REGION_KEYS[region]}`) : region;
+
+export const localizeCategory = (category, t) =>
+  CATEGORY_KEYS[category] ? t(`categories.${CATEGORY_KEYS[category]}`) : category;
+
+const INTL_LOCALES = { ru: "ru-RU", ky: "ky-KG", en: "en-GB" };
+export const intlLocale = (lang) => INTL_LOCALES[lang] || "ru-RU";
+
+export const formatPrice = (value) => Math.round(Number(value) || 0).toLocaleString("ru-RU");
+
+/** "12 июля 2026" — month names come from our own locale files so Kyrgyz is always correct. */
+export function formatTripDate(key, t) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key || "");
+  if (!m) return "";
+  const months = t("calendar.monthsGenitive", { returnObjects: true });
+  const month = Array.isArray(months) ? months[Number(m[2]) - 1] : m[2];
+  return t("calendar.dateFormat", { day: Number(m[3]), month, year: m[1] });
+}
+
+export const formatDateTime = (value, lang) => {
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf())
+    ? ""
+    : date.toLocaleDateString(intlLocale(lang), { day: "numeric", month: "short", year: "numeric" });
+};

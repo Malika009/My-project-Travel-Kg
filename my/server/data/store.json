@@ -24,7 +24,7 @@
     },
     {
       "_id": "pio-peak",
-      "name": "Пик Ленина и Меридиональная тропа",
+      "name": "Пик Ленина: базовый лагерь Ачик-Таш",
       "region": "Ошская область",
       "category": "Горы",
       "rating": 4.8,
@@ -50,7 +50,7 @@
     },
     {
       "_id": "lenin-trail",
-      "name": "Тянь-Шаньский маршрут к озеру Кель-Суу",
+      "name": "Перевал Кегети: треккинг из Чуйской долины",
       "region": "Чуйская область",
       "category": "Горы",
       "rating": 4.9,
@@ -103,7 +103,7 @@
     {
       "_id": "kashka-suu",
       "name": "Озеро Кашка-Суу и горный отдых",
-      "region": "Ошская область",
+      "region": "Чуйская область",
       "category": "Озёра",
       "rating": 4.7,
       "price": 4600,
@@ -194,7 +194,7 @@
     {
       "_id": "jeti-oguz",
       "name": "Каньон Джети-Огуз",
-      "region": "Таласская область",
+      "region": "Иссык-Кульская область",
       "category": "Каньоны",
       "rating": 4.9,
       "price": 4300,
@@ -219,7 +219,7 @@
     },
     {
       "_id": "sary-chet",
-      "name": "Саймалык каньон Сары-Чет",
+      "name": "Каньоны реки Нарын",
       "region": "Нарынская область",
       "category": "Каньоны",
       "rating": 4.8,
@@ -398,6 +398,32 @@
       "image": "https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=1400&q=85",
       "description": "Недалеко от Бишкека вас ждут хвойные леса, горные луга, панорамные виды и лёгкие маршруты на свежем воздухе.",
       "tag": "РЯДОМ С БИШКЕКОМ"
+    },
+    {
+      "_id": "altyn-arashan",
+      "name": "Алтын-Арашан и горячие источники",
+      "region": "Иссык-Кульская область",
+      "category": "Треккинг",
+      "rating": 4.9,
+      "price": 4800,
+      "duration": "2 дня",
+      "difficulty": "Средне",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Yurts_in_Altyn_Arashan%2C_Kyrgyzstan.jpg/1280px-Yurts_in_Altyn_Arashan%2C_Kyrgyzstan.jpg",
+      "description": "Пеший маршрут по хвойному ущелью к высокогорной долине с юртами и горячими радоновыми источниками у подножия пика Палатка.",
+      "tag": "ГОРЯЧИЕ ИСТОЧНИКИ"
+    },
+    {
+      "_id": "barskoon",
+      "name": "Водопады Барскоона",
+      "region": "Иссык-Кульская область",
+      "category": "Природа",
+      "rating": 4.8,
+      "price": 2600,
+      "duration": "1 день",
+      "difficulty": "Легко",
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Manas_Bowl_Waterfall_%284%29.jpg/1280px-Manas_Bowl_Waterfall_%284%29.jpg",
+      "description": "Живописное ущелье на южном берегу Иссык-Куля: каскад водопадов «Слёзы барса», памятник Гагарину и виды на ледники.",
+      "tag": "ВОДОПАДЫ И ЛЕДНИКИ"
     }
   ],
   "orders": [
@@ -419,5 +445,6 @@
     }
   ],
   "reviews": [],
-  "seedVersion": 2
+  "messages": [],
+  "seedVersion": 3
 }
