@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: travel-kg-api
+    runtime: node
+    rootDir: my/server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: CLIENT_URL
+        value: https://travelkg.uk
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
