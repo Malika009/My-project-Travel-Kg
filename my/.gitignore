@@ -25,4 +25,5 @@ dist-ssr
 
 .env
 *.env
-**/.envTravelKG-deploy/
+**/.env
+TravelKG-deploy/
