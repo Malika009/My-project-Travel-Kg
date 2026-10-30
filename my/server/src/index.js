@@ -5,6 +5,7 @@ import mongoose from 'mongoose'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import nodemailer from 'nodemailer'
+import { createHash } from 'node:crypto'
 import { readFile, writeFile, mkdir, rename } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -34,7 +35,9 @@ const corsOrigin = (origin, callback) => {
   callback(new Error('CORS origin not allowed'))
 }
 app.use(cors({ origin: corsOrigin, credentials: true, methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }))
-app.use(express.json({ limit: '1mb' }))
+// Photo uploads have their own, larger limit (see /api/admin/upload).
+const jsonBody = express.json({ limit: '1mb' })
+app.use((req, res, next) => (req.path === '/api/admin/upload' ? next() : jsonBody(req, res, next)))
 
 // Every error carries a stable `code` so the site can show it in the visitor's language.
 const fail = (res, status, code, message) => res.status(status).json({ code, message })
@@ -443,6 +446,41 @@ app.get('/api/admin/messages', auth, admin, async (req, res, next) => {
   try { res.json(await all(Message, 'messages')) } catch (e) { next(e) }
 })
 
+// ---------- tour photo upload (admin → Cloudinary) ----------
+// The browser sends a data URL; the file is checked and stored in Cloudinary, which returns a permanent HTTPS link.
+app.post('/api/admin/upload', express.json({ limit: '8mb' }), auth, admin, async (req, res) => {
+  const match = String(req.body?.dataUrl || '').match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/)
+  if (!match) return fail(res, 400, 'UPLOAD_INVALID', 'Выберите изображение JPEG, PNG или WebP.')
+  const bytes = Buffer.from(match[2], 'base64')
+  const mime = match[1]
+  if (!bytes.length || bytes.length > 5 * 1024 * 1024) return fail(res, 413, 'UPLOAD_TOO_LARGE', 'Размер изображения должен быть не более 5 МБ.')
+  const valid = mime === 'image/jpeg'
+    ? bytes[0] === 0xff && bytes[1] === 0xd8
+    : mime === 'image/png'
+      ? bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+      : bytes.toString('ascii', 0, 4) === 'RIFF' && bytes.toString('ascii', 8, 12) === 'WEBP'
+  if (!valid) return fail(res, 400, 'UPLOAD_INVALID', 'Формат файла не совпадает с его содержимым.')
+  const { CLOUDINARY_CLOUD_NAME: cloudName, CLOUDINARY_API_KEY: apiKey, CLOUDINARY_API_SECRET: apiSecret } = process.env
+  if (!cloudName || !apiKey || !apiSecret) return fail(res, 503, 'UPLOAD_NOT_CONFIGURED', 'Хранилище Cloudinary не настроено.')
+  const timestamp = Math.floor(Date.now() / 1000)
+  const folder = 'travel-kg/tours'
+  const signature = createHash('sha1').update(`folder=${folder}&timestamp=${timestamp}${apiSecret}`).digest('hex')
+  const form = new FormData()
+  form.append('file', new Blob([bytes], { type: mime }), `tour.${mime === 'image/jpeg' ? 'jpg' : mime.split('/')[1]}`)
+  form.set('api_key', apiKey)
+  form.set('timestamp', String(timestamp))
+  form.set('folder', folder)
+  form.set('signature', signature)
+  try {
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/image/upload`, { method: 'POST', body: form })
+    const result = await response.json()
+    if (!response.ok || !result.secure_url) return fail(res, 502, 'UPLOAD_FAILED', result.error?.message || 'Не удалось сохранить изображение.')
+    return res.status(201).json({ url: result.secure_url, publicId: result.public_id })
+  } catch {
+    return fail(res, 502, 'UPLOAD_FAILED', 'Хранилище изображений сейчас недоступно.')
+  }
+})
+
 // ---------- users (admin) ----------
 app.get('/api/admin/users', auth, admin, async (req, res, next) => {
   try {
@@ -466,6 +504,7 @@ app.use('/api', (req, res) => fail(res, 404, 'NOT_FOUND', 'Не найдено')
 app.use((err, req, res, _next) => {
   if (err.message === 'CORS origin not allowed') return fail(res, 403, 'FORBIDDEN', err.message)
   if (err.type === 'entity.parse.failed') return fail(res, 400, 'VALIDATION', 'Некорректный JSON')
+  if (err.type === 'entity.too.large') return fail(res, 413, 'UPLOAD_TOO_LARGE', 'Слишком большой запрос')
   console.error(err)
   if (err.name === 'ValidationError' || err.name === 'CastError') return fail(res, 400, 'VALIDATION', 'Проверьте введённые данные')
   if (err.code === 11000) return fail(res, 409, 'EMAIL_TAKEN', 'Такой email уже зарегистрирован')

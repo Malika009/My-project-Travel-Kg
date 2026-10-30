@@ -184,6 +184,36 @@ export default function Admin() {
     }
   };
 
+  // Uploads a photo to the server (stored in Cloudinary) and puts the returned link into the form.
+  const [uploading, setUploading] = useState(false);
+  const uploadImage = async (e) => {
+    const input = e.target;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      notify(t("admin.imageUploadInvalid"), "error");
+      input.value = "";
+      return;
+    }
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const { data } = await api.post("/admin/upload", { dataUrl }, { timeout: 60000 });
+      setDraft((d) => ({ ...d, image: data.url }));
+      notify(t("admin.imageUploaded"));
+    } catch (err) {
+      notify(errorText(err, t, "admin.imageUploadFailed"), "error");
+    } finally {
+      setUploading(false);
+      input.value = "";
+    }
+  };
+
   const revenue = orders.filter((o) => o.status !== "cancelled").reduce((s, o) => s + (Number(o.total) || 0), 0);
   const setText = (k, v) => setDraft((d) => ({ ...d, text: { ...d.text, [draftLang]: { ...d.text[draftLang], [k]: v } } }));
 
@@ -319,6 +349,11 @@ export default function Admin() {
               <label className="field wide">
                 <span>{t("admin.image")}</span>
                 <input type="url" required={!editingId} value={draft.image} onChange={(e) => setDraft({ ...draft, image: e.target.value })} placeholder="https://…" />
+              </label>
+              <label className="field wide">
+                <span>{t("admin.uploadImage")}</span>
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} disabled={uploading} />
+                <small className="muted">{uploading ? t("admin.uploadingImage") : t("admin.uploadImageHelp")}</small>
               </label>
               {draft.image && <img className="admin-image-preview wide" src={resolveAssetUrl(draft.image)} alt={t("admin.imagePreview")} />}
               <button className="button button-primary wide">

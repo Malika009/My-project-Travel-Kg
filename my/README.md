@@ -1,15 +1,17 @@
 ﻿# Travel KG
 
-Каталог авторских маршрутов по Кыргызстану на React, Vite и Express. Данные загружаются через REST API. Для хранения можно использовать MongoDB; если переменная подключения не задана, backend сохраняет данные в `server/data/store.json`.
+Сайт туров по Кыргызстану: каталог из 32 маршрутов, страница тура с программой и календарём свободных дат, корзина, онлайн-бронирование, личный кабинет и админ-панель. Три языка (кыргызский, русский, английский), светлая и тёмная тема, мобильная версия.
 
-## Запуск
+Стек: React 19 + Vite 8 (frontend), Express 5 (API), MongoDB или JSON-файл для хранения данных.
 
-Требуется Node.js 20.19+ (Vite 8).
+## Локальный запуск
+
+Нужен Node.js 20.19+.
 
 ```powershell
 cd my
 npm install
-npm run dev
+npm run dev            # сайт: http://localhost:5173
 ```
 
 В отдельном терминале:
@@ -18,23 +20,35 @@ npm run dev
 cd my/server
 npm install
 Copy-Item .env.example .env
-npm run dev
+npm run dev            # API: http://localhost:4000/api
 ```
 
-Frontend работает на `http://localhost:5173`, API — на `http://localhost:4000/api`. Production frontend собирается командой `npm run build` из `my`.
+Vite перенаправляет `/api` на `http://localhost:4000`. Если API запущен на другом порту: `$env:API_PROXY="http://localhost:4100"; npm run dev`.
 
-## MongoDB и первый администратор
+Первый администратор: зарегистрируйтесь с email из `ADMIN_EMAIL` в `server/.env`.
 
-Чтобы включить MongoDB, укажите `MONGODB_URI` в `server/.env` (например, `mongodb://127.0.0.1:27017/travelkg`) и перезапустите API. Без `MONGODB_URI` используется локальный JSON-файл. Для первого администратора зарегистрируйте адрес, совпадающий с `ADMIN_EMAIL` в `.env` (по умолчанию `admin@travelkg.kg`), затем войдите этим аккаунтом.
+## Публикация
 
-Обязательно задайте собственный длинный случайный `JWT_SECRET`. Для отправки подтверждений заказа настройте SMTP-поля из `.env.example`. Внешний платёжный шлюз и Google/GitHub OAuth требуют учётных данных провайдера; в проекте оставлены обычная JWT-регистрация и создание заказа, без фиктивной обработки платежа. Фото маршрутов загружаются с Unsplash.
+- **Frontend** (`travelkg.uk`, Cloudflare Pages): корневая папка `my`, команда сборки `npm run build`, папка результата `dist`. Переменная `VITE_API_URL` — адрес API, например `https://my-project-travel-kg.onrender.com/api`. Если она не задана, production-сборка сама использует этот адрес.
+- **Backend** (Render, файл `render.yaml` в корне репозитория): папка `my/server`, `npm ci` → `npm start`, проверка `/api/health`.
+  Переменные: `CLIENT_URL=https://travelkg.uk`, `JWT_SECRET` (длинная случайная строка), `ADMIN_EMAIL`, `MONGODB_URI`.
+  Для загрузки фото из админки: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` (только на backend).
+  Для писем о бронировании: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`.
 
-## Архитектура
+Без `MONGODB_URI` данные хранятся в `server/data/store.json` — на бесплатном хостинге этот файл стирается при перезапуске, поэтому для публикации нужна MongoDB (например, бесплатный кластер MongoDB Atlas).
 
-- `src/App.jsx` — маршруты, страницы, UI-компоненты и Context для сессии, избранного, корзины и настроек.
-- `src/data/services.js` — общий Axios-клиент и JWT заголовок.
-- `src/i18n.js`, `src/locales/` — i18next и файлы локализации.
-- `src/components/ErrorBoundary.jsx` — граница ошибок React.
-- `server/src/index.js` — Express REST API, валидация, JWT роли, email через SMTP, MongoDB/JSON storage.
+При старте сервер один раз добавляет в базу новые туры и исправления (миграции seed v2/v3); удалённые администратором туры не возвращаются.
 
-API включает места, пользователей, заказы и отзывы. Интерфейс поддерживает каталог с поиском и фильтрами, избранное, корзину, бронирование, кабинет, панель администратора, график заказов, модерацию пользователей/отзывов, светлую/тёмную тему и три языка.
+## Структура
+
+- `src/App.jsx` — маршруты; страницы загружаются по требованию.
+- `src/pages/` — главная, каталог, тур, избранное, корзина, оформление, вход, кабинет, админка, авторы фото.
+- `src/components/` — шапка, подвал, карточка тура, календарь, просмотр фото, чат-помощник, общие элементы.
+- `src/context/AppContext.jsx` — туры, пользователь, избранное, корзина, тема, язык, уведомления.
+- `src/data/tourInfo.js` — активности, сезоны, цены и свободные даты (копия правил на сервере: `server/src/booking.js`).
+- `src/locales/` — переводы интерфейса (`ru/ky/en.json`) и туров (`tours.*.json`).
+- `src/assets/places/` — фотографии мест (Wikimedia Commons, авторы — в `src/data/photoCredits.json` и на странице `/credits`).
+- `server/src/index.js` — REST API: туры, аккаунты, бронирования, свободные места, отзывы, сообщения, загрузка фото.
+- `server/src/seed.js` — встроенные туры.
+
+Сервер сам пересчитывает цену каждой брони и проверяет дату и число свободных мест — цена из браузера не используется.

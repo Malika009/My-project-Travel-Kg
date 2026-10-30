@@ -3,7 +3,9 @@
     "title": "Travel KG — tours and trips across Kyrgyzstan",
     "description": "Small-group tours of Kyrgyzstan: Issyk-Kul, Son-Kul, Ala-Archa, Jeti-Oguz and more. Book online with local guides."
   },
-  "brand": { "tagline": "Travel across Kyrgyzstan" },
+  "brand": {
+    "tagline": "Travel across Kyrgyzstan"
+  },
   "nav": {
     "home": "Home",
     "tours": "Tours",
@@ -87,12 +89,30 @@
     "title": "A carefree journey —",
     "accent": "we take care of everything",
     "items": {
-      "guides": { "title": "Local guides", "text": "Our guides grew up in these mountains and know every trail, story and the best photo spots." },
-      "groups": { "title": "Small groups", "text": "Up to 12 people per group, a comfortable pace and attention to everyone." },
-      "prices": { "title": "Honest prices", "text": "You see the full price straight away, and it never changes. No hidden fees." },
-      "cancel": { "title": "Free cancellation", "text": "Plans changed? Cancel up to 48 hours before departure at no cost." },
-      "support": { "title": "24/7 support", "text": "We are here before, during and after your trip — by phone and WhatsApp." },
-      "eco": { "title": "Responsible travel", "text": "We work with local families and make sure nature stays clean after we leave." }
+      "guides": {
+        "title": "Local guides",
+        "text": "Our guides grew up in these mountains and know every trail, story and the best photo spots."
+      },
+      "groups": {
+        "title": "Small groups",
+        "text": "Up to 12 people per group, a comfortable pace and attention to everyone."
+      },
+      "prices": {
+        "title": "Honest prices",
+        "text": "You see the full price straight away, and it never changes. No hidden fees."
+      },
+      "cancel": {
+        "title": "Free cancellation",
+        "text": "Plans changed? Cancel up to 48 hours before departure at no cost."
+      },
+      "support": {
+        "title": "24/7 support",
+        "text": "We are here before, during and after your trip — by phone and WhatsApp."
+      },
+      "eco": {
+        "title": "Responsible travel",
+        "text": "We work with local families and make sure nature stays clean after we leave."
+      }
     }
   },
   "about": {
@@ -134,13 +154,48 @@
     "summary_one": "Average rating from {{count}} review",
     "summary_other": "Average rating from {{count}} reviews",
     "items": [
-      { "name": "Anna Melnikova", "meta": "Son-Kul · July 2025", "rating": 5, "text": "I thought I would just look at the mountains. Instead I came back feeling I had found a place I had been looking for all my life. A night in a yurt under the stars by the lake was the best moment of all my travels." },
-      { "name": "Aigerim Sadykova", "meta": "Ala-Archa · May 2025", "rating": 5, "text": "A calm and beautiful route. Our guide showed us places you won’t find in any guidebook and made sure nobody got too tired." },
-      { "name": "Nikolay Petrov", "meta": "Issyk-Kul · August 2025", "rating": 5, "text": "We travelled as a family with two kids. Everything was thought through: transfers, meals, stops. The children still talk about the beach and the mountains on the horizon." },
-      { "name": "Madina Toktogulova", "meta": "Jeti-Oguz · September 2025", "rating": 5, "text": "The red rocks at sunrise are unreal! Everything ran like clockwork: pick-up from the hotel, great food, back on time. I will definitely travel with you again." },
-      { "name": "Daniil Kim", "meta": "Ala-Kul · August 2025", "rating": 4, "text": "A tough but incredible trek. The climb to the pass wasn’t easy, but the view of the turquoise lake made up for everything. I’d love a little more time to rest by the water." },
-      { "name": "Elmira Abdykadyrova", "meta": "Tash-Rabat · June 2025", "rating": 5, "text": "I loved the balance of history and nature. The caravanserai is impressive, and the night in yurts with dinner at a shepherd family’s home will stay with me for a long time." },
-      { "name": "Oksana Litvinenko", "meta": "Karakol · October 2025", "rating": 5, "text": "The trip was even more comfortable than I expected. The guides were attentive and full of stories. The Dungan mosque and the hot springs were a delight." }
+      {
+        "name": "Anna Melnikova",
+        "meta": "Son-Kul · July 2025",
+        "rating": 5,
+        "text": "I thought I would just look at the mountains. Instead I came back feeling I had found a place I had been looking for all my life. A night in a yurt under the stars by the lake was the best moment of all my travels."
+      },
+      {
+        "name": "Aigerim Sadykova",
+        "meta": "Ala-Archa · May 2025",
+        "rating": 5,
+        "text": "A calm and beautiful route. Our guide showed us places you won’t find in any guidebook and made sure nobody got too tired."
+      },
+      {
+        "name": "Nikolay Petrov",
+        "meta": "Issyk-Kul · August 2025",
+        "rating": 5,
+        "text": "We travelled as a family with two kids. Everything was thought through: transfers, meals, stops. The children still talk about the beach and the mountains on the horizon."
+      },
+      {
+        "name": "Madina Toktogulova",
+        "meta": "Jeti-Oguz · September 2025",
+        "rating": 5,
+        "text": "The red rocks at sunrise are unreal! Everything ran like clockwork: pick-up from the hotel, great food, back on time. I will definitely travel with you again."
+      },
+      {
+        "name": "Daniil Kim",
+        "meta": "Ala-Kul · August 2025",
+        "rating": 4,
+        "text": "A tough but incredible trek. The climb to the pass wasn’t easy, but the view of the turquoise lake made up for everything. I’d love a little more time to rest by the water."
+      },
+      {
+        "name": "Elmira Abdykadyrova",
+        "meta": "Tash-Rabat · June 2025",
+        "rating": 5,
+        "text": "I loved the balance of history and nature. The caravanserai is impressive, and the night in yurts with dinner at a shepherd family’s home will stay with me for a long time."
+      },
+      {
+        "name": "Oksana Litvinenko",
+        "meta": "Karakol · October 2025",
+        "rating": 5,
+        "text": "The trip was even more comfortable than I expected. The guides were attentive and full of stories. The Dungan mosque and the hot springs were a delight."
+      }
     ],
     "tourTitle": "Traveller reviews",
     "count_one": "{{count}} review",
@@ -159,11 +214,26 @@
     "title": "Frequently asked",
     "accent": "questions",
     "items": [
-      { "q": "How do I book a tour?", "a": "Open the tour page, pick a date in the calendar, the number of travellers and the length of the trip. Then press “Book” and leave your contact details — a manager will confirm within two hours." },
-      { "q": "Do I have to pay straight away?", "a": "No. There is no prepayment: after confirmation we send you payment details, and you can pay by card, bank transfer or in cash on the day of the trip." },
-      { "q": "Can I cancel my booking?", "a": "Yes. Cancellation is free up to 48 hours before the tour starts. After that we keep 30% of the price." },
-      { "q": "When is the best time to visit Kyrgyzstan?", "a": "High-altitude lakes (Son-Kul, Ala-Kul, Kel-Suu) are open from June to September. Issyk-Kul, Ala-Archa, Burana and Karakol are wonderful all year round." },
-      { "q": "Are the tours suitable for children?", "a": "Yes, routes marked “Easy” suit children aged 6 and over. The minimum age for hard treks is 14." }
+      {
+        "q": "How do I book a tour?",
+        "a": "Open the tour page, pick a date in the calendar, the number of travellers and the length of the trip. Then press “Book” and leave your contact details — a manager will confirm within two hours."
+      },
+      {
+        "q": "Do I have to pay straight away?",
+        "a": "No. There is no prepayment: after confirmation we send you payment details, and you can pay by card, bank transfer or in cash on the day of the trip."
+      },
+      {
+        "q": "Can I cancel my booking?",
+        "a": "Yes. Cancellation is free up to 48 hours before the tour starts. After that we keep 30% of the price."
+      },
+      {
+        "q": "When is the best time to visit Kyrgyzstan?",
+        "a": "High-altitude lakes (Son-Kul, Ala-Kul, Kel-Suu) are open from June to September. Issyk-Kul, Ala-Archa, Burana and Karakol are wonderful all year round."
+      },
+      {
+        "q": "Are the tours suitable for children?",
+        "a": "Yes, routes marked “Easy” suit children aged 6 and over. The minimum age for hard treks is 14."
+      }
     ]
   },
   "contacts": {
@@ -259,7 +329,11 @@
     "talas": "Talas Region",
     "batken": "Batken Region"
   },
-  "difficulty": { "easy": "Easy", "medium": "Moderate", "hard": "Challenging" },
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Moderate",
+    "hard": "Challenging"
+  },
   "duration": {
     "days_one": "{{count}} day",
     "days_other": "{{count}} days"
@@ -320,12 +394,30 @@
     },
     "conditionsTitle": "Booking terms",
     "conditions": {
-      "payment": { "title": "Payment", "text": "No prepayment. Pay by card, bank transfer or in cash once your booking is confirmed." },
-      "cancel": { "title": "Cancellation", "text": "Free up to 48 hours before the tour starts. After that, 30% of the price is retained." },
-      "group": { "title": "Group discount", "text": "Groups of {{count}} or more get a 10% discount." },
-      "age": { "title": "Age", "text": "Easy routes — from 6 years, moderate — from 10, challenging — from 14." },
-      "meeting": { "title": "Meeting point", "text": "Ala-Too Square in Bishkek or your hotel in the city centre. We send the exact time the day before." },
-      "bring": { "title": "What to bring", "text": "Comfortable shoes, a warm jacket, a hat, sunscreen and your passport." }
+      "payment": {
+        "title": "Payment",
+        "text": "No prepayment. Pay by card, bank transfer or in cash once your booking is confirmed."
+      },
+      "cancel": {
+        "title": "Cancellation",
+        "text": "Free up to 48 hours before the tour starts. After that, 30% of the price is retained."
+      },
+      "group": {
+        "title": "Group discount",
+        "text": "Groups of {{count}} or more get a 10% discount."
+      },
+      "age": {
+        "title": "Age",
+        "text": "Easy routes — from 6 years, moderate — from 10, challenging — from 14."
+      },
+      "meeting": {
+        "title": "Meeting point",
+        "text": "Ala-Too Square in Bishkek or your hotel in the city centre. We send the exact time the day before."
+      },
+      "bring": {
+        "title": "What to bring",
+        "text": "Comfortable shoes, a warm jacket, a hat, sunscreen and your passport."
+      }
     },
     "similar": "Similar tours"
   },
@@ -354,46 +446,120 @@
   "program": {
     "dayLabel": "Day {{n}}",
     "oneDay": [
-      { "time": "08:00", "title": "Departure.", "text": "We meet in central Bishkek and set off for {{place}}." },
-      { "time": "10:30", "title": "Start of the route.", "text": "Meet your guide, a short briefing and the first walk." },
-      { "time": "13:30", "title": "Lunch.", "text": "Traditional dishes outdoors or at a guesthouse." },
-      { "time": "15:00", "title": "Free time.", "text": "Photo stops, walks and relaxing at the most beautiful spots." },
-      { "time": "19:30", "title": "Return.", "text": "Back in Bishkek, sharing impressions on the way." }
+      {
+        "time": "08:00",
+        "title": "Departure.",
+        "text": "We meet in central Bishkek and set off for {{place}}."
+      },
+      {
+        "time": "10:30",
+        "title": "Start of the route.",
+        "text": "Meet your guide, a short briefing and the first walk."
+      },
+      {
+        "time": "13:30",
+        "title": "Lunch.",
+        "text": "Traditional dishes outdoors or at a guesthouse."
+      },
+      {
+        "time": "15:00",
+        "title": "Free time.",
+        "text": "Photo stops, walks and relaxing at the most beautiful spots."
+      },
+      {
+        "time": "19:30",
+        "title": "Return.",
+        "text": "Back in Bishkek, sharing impressions on the way."
+      }
     ],
-    "first": { "title": "Into the mountains", "text": "We leave Bishkek in the morning, stopping at viewpoints and for lunch on the way. In the evening we check in and have dinner together." },
-    "last": { "title": "Heading home", "text": "A slow breakfast, one last walk and the drive back to Bishkek. Arrival in the evening." },
+    "first": {
+      "title": "Into the mountains",
+      "text": "We leave Bishkek in the morning, stopping at viewpoints and for lunch on the way. In the evening we check in and have dinner together."
+    },
+    "last": {
+      "title": "Heading home",
+      "text": "A slow breakfast, one last walk and the drive back to Bishkek. Arrival in the evening."
+    },
     "middle": {
       "mountains": [
-        { "title": "Trails and panoramas", "text": "A hike to the viewpoints of {{place}}, a picnic facing snowy peaks and mountain stories from your guide." },
-        { "title": "Glaciers and waterfalls", "text": "A walk to waterfalls and the foot of the glaciers, with free time for photos and rest." }
+        {
+          "title": "Trails and panoramas",
+          "text": "A hike to the viewpoints of {{place}}, a picnic facing snowy peaks and mountain stories from your guide."
+        },
+        {
+          "title": "Glaciers and waterfalls",
+          "text": "A walk to waterfalls and the foot of the glaciers, with free time for photos and rest."
+        }
       ],
       "lakes": [
-        { "title": "A day by the water", "text": "A walk along the shore, horse riding or a boat trip, and sunset over the lake." },
-        { "title": "Nomadic life", "text": "Meet a shepherd family, learn to cook boorsok and spend the evening by the campfire." }
+        {
+          "title": "A day by the water",
+          "text": "A walk along the shore, horse riding or a boat trip, and sunset over the lake."
+        },
+        {
+          "title": "Nomadic life",
+          "text": "Meet a shepherd family, learn to cook boorsok and spend the evening by the campfire."
+        }
       ],
       "trekking": [
-        { "title": "Climbing to the pass", "text": "We gain height across alpine meadows, have lunch on the trail and camp in the mountains." },
-        { "title": "The highlight of the trek", "text": "Reaching {{place}} — the most beautiful part of the route. Rest, photos and descent to camp." }
+        {
+          "title": "Climbing to the pass",
+          "text": "We gain height across alpine meadows, have lunch on the trail and camp in the mountains."
+        },
+        {
+          "title": "The highlight of the trek",
+          "text": "Reaching {{place}} — the most beautiful part of the route. Rest, photos and descent to camp."
+        }
       ],
       "canyons": [
-        { "title": "Canyon labyrinths", "text": "A walk through rocky corridors, the best photo angles and a picnic in the shade of the cliffs." },
-        { "title": "Sunset among the rocks", "text": "A free morning, and in the evening we watch the rocks glow red at sunset." }
+        {
+          "title": "Canyon labyrinths",
+          "text": "A walk through rocky corridors, the best photo angles and a picnic in the shade of the cliffs."
+        },
+        {
+          "title": "Sunset among the rocks",
+          "text": "A free morning, and in the evening we watch the rocks glow red at sunset."
+        }
       ],
       "adventures": [
-        { "title": "The main adventure", "text": "Briefing, gear check and the main activity with experienced instructors." },
-        { "title": "New heights", "text": "A second, more intense session followed by an evening by the campfire." }
+        {
+          "title": "The main adventure",
+          "text": "Briefing, gear check and the main activity with experienced instructors."
+        },
+        {
+          "title": "New heights",
+          "text": "A second, more intense session followed by an evening by the campfire."
+        }
       ],
       "nature": [
-        { "title": "Forests and waterfalls", "text": "Walks along protected trails, stops at waterfalls and lunch with a local family." },
-        { "title": "A slow day", "text": "Free time, walks around the area and a look at local crafts." }
+        {
+          "title": "Forests and waterfalls",
+          "text": "Walks along protected trails, stops at waterfalls and lunch with a local family."
+        },
+        {
+          "title": "A slow day",
+          "text": "Free time, walks around the area and a look at local crafts."
+        }
       ],
       "history": [
-        { "title": "On the Silk Road", "text": "A tour of historic sites and stories of caravans, merchants and ancient cities." },
-        { "title": "Legends and crafts", "text": "A museum visit, a felt-making workshop and a traditional dinner." }
+        {
+          "title": "On the Silk Road",
+          "text": "A tour of historic sites and stories of caravans, merchants and ancient cities."
+        },
+        {
+          "title": "Legends and crafts",
+          "text": "A museum visit, a felt-making workshop and a traditional dinner."
+        }
       ],
       "city": [
-        { "title": "The heart of the city", "text": "A walking tour of the centre, its squares and parks, and a museum visit." },
-        { "title": "A taste of the East", "text": "The bazaar, spices, dried fruit and a tasting of local cuisine." }
+        {
+          "title": "The heart of the city",
+          "text": "A walking tour of the centre, its squares and parks, and a museum visit."
+        },
+        {
+          "title": "A taste of the East",
+          "text": "The bazaar, spices, dried fruit and a tasting of local cuisine."
+        }
       ]
     }
   },
@@ -415,9 +581,43 @@
     "noteConfirm": "Confirmation within 2 hours"
   },
   "calendar": {
-    "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-    "monthsGenitive": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-    "weekdays": ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"],
+    "months": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "monthsGenitive": [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December"
+    ],
+    "weekdays": [
+      "Mo",
+      "Tu",
+      "We",
+      "Th",
+      "Fr",
+      "Sa",
+      "Su"
+    ],
     "dateFormat": "{{day}} {{month}} {{year}}",
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
@@ -623,7 +823,13 @@
     "reviewDeleted": "Review deleted",
     "reviewDeleteFail": "Could not delete the review",
     "reviewsNone": "No reviews yet.",
-    "noMessages": "No messages yet."
+    "noMessages": "No messages yet.",
+    "uploadImage": "Or upload a photo from your computer",
+    "uploadingImage": "Uploading photo…",
+    "uploadImageHelp": "JPEG, PNG or WebP up to 5 MB. The photo link is filled in automatically.",
+    "imageUploadInvalid": "Choose a JPEG, PNG or WebP image up to 5 MB",
+    "imageUploaded": "Photo uploaded",
+    "imageUploadFailed": "Could not upload the photo"
   },
   "chat": {
     "title": "Travel KG assistant",
@@ -700,6 +906,10 @@
     "OAUTH_NOT_CONFIGURED": "Sign-in with this service is not set up",
     "OAUTH_FAILED": "Could not sign in with this service",
     "TOO_MANY": "Too many requests. Please wait a minute.",
+    "UPLOAD_INVALID": "Choose a JPEG, PNG or WebP image",
+    "UPLOAD_TOO_LARGE": "The image must be 5 MB or smaller",
+    "UPLOAD_NOT_CONFIGURED": "Photo storage (Cloudinary) is not set up on the server",
+    "UPLOAD_FAILED": "Could not save the photo. Please try again later.",
     "SERVER_ERROR": "Server error. Please try again later."
   }
 }
