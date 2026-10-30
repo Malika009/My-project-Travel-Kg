@@ -8,7 +8,8 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { api, setToken } from "./data/services";
+import { api, resolveAssetUrl, setToken } from "./data/services";
+import placesFallback from "./data/placesFallback.json";
 import { useTranslation } from "react-i18next";
 import i18n, { normalizeLanguage } from "./i18n.js";
 import { localizePlace } from "./data/localizePlace";
@@ -31,7 +32,7 @@ const makeCartItemKey = (place, date = "") => `${place._id}-${date || "quick"}-$
 
 function App() {
   const { t } = useTranslation();
-  const [places, setPlaces] = useState([]),
+  const [places, setPlaces] = useState(placesFallback),
     [user, setUser] = useState(() =>
       JSON.parse(localStorage.getItem("travel-user") || "null"),
     );
@@ -53,7 +54,8 @@ function App() {
     api
       .get("/places")
       .then((r) => {
-        if (r.data?.length) setPlaces(r.data);
+        // Keep the built-in tours if the API answers with something unexpected.
+        if (Array.isArray(r.data) && r.data.length) setPlaces(r.data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -588,7 +590,7 @@ function Catalog() {
               <option value="rating">{t("catalog.sortRating")}</option>
             </select>
           </div>
-          {loading ? (
+          {loading && !places.length ? (
             <SkeletonGrid />
           ) : items.length ? (
             <div className="place-grid catalog-grid">
@@ -1622,7 +1624,7 @@ function AuthRedirect() {
 function TravelImage({ src, alt, className, loading = "lazy" }) {
   const { t } = useTranslation();
   const [unavailable, setUnavailable] = useState(false);
-  const imageSrc = src || DEFAULT_PLACE_IMAGE;
+  const imageSrc = resolveAssetUrl(src || DEFAULT_PLACE_IMAGE);
 
   if (unavailable) {
     return (
