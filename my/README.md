@@ -27,7 +27,15 @@ Frontend работает на `http://localhost:5173`, API — на `http://loc
 
 Чтобы включить MongoDB, укажите `MONGODB_URI` в `server/.env` (например, `mongodb://127.0.0.1:27017/travelkg`) и перезапустите API. Без `MONGODB_URI` используется локальный JSON-файл. Для первого администратора зарегистрируйте адрес, совпадающий с `ADMIN_EMAIL` в `.env` (по умолчанию `admin@travelkg.kg`), затем войдите этим аккаунтом.
 
-Обязательно задайте собственный длинный случайный `JWT_SECRET`. Для отправки подтверждений заказа настройте SMTP-поля из `.env.example`. Внешний платёжный шлюз и Google/GitHub OAuth требуют учётных данных провайдера; в проекте оставлены обычная JWT-регистрация и создание заказа, без фиктивной обработки платежа. Фото маршрутов загружаются с Unsplash.
+Обязательно задайте собственный длинный случайный `JWT_SECRET`. Для отправки подтверждений заказа настройте SMTP-поля из `.env.example`. Внешний платёжный шлюз и Google/GitHub OAuth требуют учётных данных провайдера; в проекте оставлены обычная JWT-регистрация и создание заказа, без фиктивной обработки платежа. Исходные фотографии маршрутов находятся в `public/tours`; администратор может указать URL или загрузить JPEG/PNG/WebP до 5 МБ.
+
+## Production deployment
+
+`travelkg.uk` публикуется как статический frontend, поэтому GitHub Pages/Cloudflare Pages не запускает Express API. Backend нужно развернуть отдельно и задать в настройках сборки frontend переменную `VITE_API_URL` с полным адресом API, например `https://<your-api-host>/api`. Не задавайте там `localhost`: в браузере посетителя он указывает на его собственный компьютер. Пересоберите и redeploy frontend после изменения этой переменной.
+
+На backend задайте `CLIENT_URL=https://travelkg.uk`, `JWT_SECRET`, `MONGODB_URI` и `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`. Создайте Cloudinary account и возьмите три значения Cloudinary в Dashboard → Settings → API Keys. Секрет Cloudinary храните только в backend environment variables, не добавляйте в frontend и Git. Для персистентных туров используйте MongoDB; файловое хранилище `server/data/store.json` подходит только для локального запуска и может очищаться при перезапуске хостинга.
+
+Загрузка файла доступна в панели администратора и проходит через JWT-защищённый `POST /api/admin/upload`. Backend передаёт файл в Cloudinary и возвращает постоянный HTTPS URL, который сохраняется вместе с туром в MongoDB. После настройки проверьте `https://<your-api-host>/api/health`, затем откройте каталог на `https://travelkg.uk` и перезагрузите страницу: URL фото должен оставаться в записи тура.
 
 ## Архитектура
 

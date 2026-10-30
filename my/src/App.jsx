@@ -8,7 +8,8 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { api, setToken } from "./data/services";
+import { api, resolveAssetUrl, setToken } from "./data/services";
+import placesFallback from "./data/placesFallback.json";
 import { useTranslation } from "react-i18next";
 import i18n, { normalizeLanguage } from "./i18n.js";
 import {
@@ -25,11 +26,11 @@ import "./App.css";
 const State = createContext(null);
 const useApp = () => useContext(State);
 const DEFAULT_PLACE_IMAGE =
-  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80";
+  "/tours/photo-1501785888041-af3ef285b470.jpg";
 
 function App() {
   const { t } = useTranslation();
-  const [places, setPlaces] = useState([]),
+  const [places, setPlaces] = useState(placesFallback),
     [user, setUser] = useState(() =>
       JSON.parse(localStorage.getItem("travel-user") || "null"),
     );
@@ -51,9 +52,15 @@ function App() {
     api
       .get("/places")
       .then((r) => {
-        if (r.data?.length) setPlaces(r.data);
+        const data = Array.isArray(r.data)
+          ? r.data
+          : Array.isArray(r.data?.places)
+            ? r.data.places
+            : null;
+        if (!data) throw new Error("The API returned a non-JSON response.");
+        setPlaces(data.length ? data : placesFallback);
       })
-      .catch(() => {})
+      .catch(() => setPlaces((current) => Array.isArray(current) && current.length ? current : placesFallback))
       .finally(() => setLoading(false));
   }, []);
   useEffect(() => {
@@ -1256,6 +1263,7 @@ function Admin() {
       image: "",
       description: "",
     });
+  const [uploadingImage, setUploadingImage] = useState(false);
   const { t } = useTranslation();
   const load = () =>
     Promise.all([api.get("/orders"), api.get("/admin/users")])
@@ -1267,6 +1275,33 @@ function Admin() {
   useEffect(() => {
     load();
   }, []);
+  const uploadImage = async (event) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      notify(t('admin.imageUploadFailed'));
+      input.value = '';
+      return;
+    }
+    setUploadingImage(true);
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Could not read image'));
+        reader.readAsDataURL(file);
+      });
+      const { data } = await api.post('/admin/upload', { dataUrl });
+      setDraft((current) => ({ ...current, image: data.url }));
+      notify(t('admin.imageUploaded'));
+    } catch (error) {
+      notify(error.response?.data?.message || t('admin.imageUploadFailed'));
+    } finally {
+      setUploadingImage(false);
+      input.value = '';
+    }
+  };
   const save = async (e) => {
     e.preventDefault();
     try {
@@ -1385,11 +1420,26 @@ function Admin() {
           ].map(([k, l]) => (
             <label key={k}>
               {l}
-              <input
-                required={!editingId && k === "image" ? true : k !== "image"}
-                value={draft[k]}
-                onChange={(e) => setDraft({ ...draft, [k]: e.target.value })}
-              />
+              {k === "image" ? (
+                <>
+                  <input
+                    type="text"
+                    required={!editingId}
+                    value={draft.image}
+                    placeholder="https://..."
+                    onChange={(e) => setDraft({ ...draft, image: e.target.value })}
+                  />
+                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={uploadImage} disabled={uploadingImage} />
+                  <small>{uploadingImage ? t("admin.uploadingImage") : t("admin.uploadImageHelp")}</small>
+                  {draft.image && <img className="admin-image-preview" src={resolveAssetUrl(draft.image)} alt={t("admin.imagePreview")} />}
+                </>
+              ) : (
+                <input
+                  required
+                  value={draft[k]}
+                  onChange={(e) => setDraft({ ...draft, [k]: e.target.value })}
+                />
+              )}
             </label>
           ))}
           <label className="wide">
@@ -1460,10 +1510,17 @@ function AuthRedirect() {
 }
 function TravelImage({ src, alt, className, loading = "lazy" }) {
   const { t } = useTranslation();
-  const [unavailable, setUnavailable] = useState(false);
-  const imageSrc = src || DEFAULT_PLACE_IMAGE;
+  const imageSrc = resolveAssetUrl(src || DEFAULT_PLACE_IMAGE);
+  const fallbackSrc = resolveAssetUrl(DEFAULT_PLACE_IMAGE);
+  const [failedSource, setFailedSource] = useState(false);
+  const [failedFallback, setFailedFallback] = useState(false);
 
-  if (unavailable) {
+  useEffect(() => {
+    setFailedSource(false);
+    setFailedFallback(false);
+  }, [imageSrc]);
+
+  if (failedFallback) {
     return (
       <span className={`image-fallback ${className || ""}`} role="img" aria-label={alt}>
         <span>TRAVEL KG<small>{t("helper.travelShort")}</small></span>
@@ -1473,11 +1530,14 @@ function TravelImage({ src, alt, className, loading = "lazy" }) {
 
   return (
     <img
-      src={imageSrc}
+      src={failedSource ? fallbackSrc : imageSrc}
       alt={alt}
       className={className}
       loading={loading}
-      onError={() => setUnavailable(true)}
+      onError={() => {
+        if (failedSource) setFailedFallback(true);
+        else setFailedSource(true);
+      }}
     />
   );
 }
